@@ -156,6 +156,8 @@ function GenePool()
 	let _rendering              = false;
 	let _swimbotBeingDragged    = false;
 	let _foodBitBeingDragged    = false;
+	let _lastTouchX             = ZERO;
+	let _lastTouchY             = ZERO;
 	let _poolCenter             = new Vector2D();   
 	let _clock                  = 0;
 	let _numSwimbots 	        = 0;
@@ -173,6 +175,7 @@ function GenePool()
 	let _levelOfDetail	        = SWIMBOT_LEVEL_OF_DETAIL_LOW;
 	let _previousTime           = ZERO;
 	let _frameRate              = ZERO;
+	let _lastRenderTime         = ZERO;
 	let _familyTree             = new FamilyTree();
 	let _phyloTree              = new PhyloTree();
 	let _panningLeft            = false;
@@ -2554,8 +2557,15 @@ if ( globalTweakers.numFoodTypes === 2 )
 		//----------------------------------
 		// render framerate
 		//----------------------------------
+		let now = performance.now();
+		if ( _lastRenderTime > ZERO )
+		{
+			_frameRate += ( 1000.0 / Math.max( now - _lastRenderTime, 1.0 ) - _frameRate ) * 0.1;	// smoothed
+		}
+		_lastRenderTime = now;
+
 		let textColor = new Color( 1, 1, 1, 0.5 );
-        globalRenderer.renderText( "framerate = " + _frameRate.toString(), _canvasWidth - 200, 20, textColor, "14px Arial" ); 
+        globalRenderer.renderText( Math.round( _frameRate ).toString() + " fps", _canvasWidth - 64, 24, textColor, "12px Inter, system-ui, sans-serif" ); 
         
 		//----------------------------------
 		// render view tracking info
@@ -2577,7 +2587,7 @@ if ( globalTweakers.numFoodTypes === 2 )
                 else if ( viewTrackingMode === ViewTrackingMode.VIRGIN     ) { modeString = "viewing oldest virgin"      }
                 else if ( viewTrackingMode === ViewTrackingMode.HUNGRY     ) { modeString = "viewing glutton"            }
 
-                let font  = "14px Arial";
+                let font  = "13px Inter, system-ui, sans-serif";
                 let color = new Color( 1, 1, 1, 0.5 );
                 globalRenderer.renderText( modeString, _canvasWidth - 170, _canvasHeight - 30, color, font );
             }
@@ -2668,6 +2678,8 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.touchDown = function( x, y )
 	{
         _touch.setToDown( x, y ); 	
+        _lastTouchX = x;
+        _lastTouchY = y;
        this.handleNonUITouchDownActions( x, y );
 	}
 	
@@ -2733,9 +2745,12 @@ if ( globalTweakers.numFoodTypes === 2 )
                     }    
                     else
                     {
-                        let x = _touch.getVelocityX();
-                        let y = _touch.getVelocityY();
-                        _camera.drag( x, y );
+                        //--------------------------------------------------
+                        // pan so the grabbed spot stays under the pointer
+                        //--------------------------------------------------
+                        let dx = ( x - _lastTouchX ) / _canvasWidth  * _camera.getXDimension();
+                        let dy = ( y - _lastTouchY ) / _canvasHeight * _camera.getYDimension();
+                        _camera.panBy( -dx, -dy );
                     }
                 }
             }
@@ -2757,6 +2772,9 @@ if ( globalTweakers.numFoodTypes === 2 )
                 //------------------------------------------------------------
                 _obstacle.detectHover( _vectorUtility )                 
             }		
+
+            _lastTouchX = x;
+            _lastTouchY = y;
         }
 	}
 
@@ -2790,6 +2808,15 @@ if ( globalTweakers.numFoodTypes === 2 )
 	this.touchOut = function( x, y )
 	{
         this.touchUp( x, y );
+    }
+
+	//------------------------------------------------------------
+	// zoom in or out, keeping the pool point under (x, y) fixed
+	//------------------------------------------------------------
+	this.zoomAtScreenPosition = function( x, y, factor )
+	{
+        _vectorUtility = this.convertScreenCoordinatesToPoolPosition( x, y );
+        _camera.zoomAt( factor, _vectorUtility.x, _vectorUtility.y );
     }
 
 	//------------------------------------

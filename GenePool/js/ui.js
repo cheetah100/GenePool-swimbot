@@ -18,10 +18,32 @@
 const FIRST_INFO_PAGE = 1;
 const LAST_INFO_PAGE  = 28;
 
-const DEFAULT_BASIC_PANEL_COLOR         = "#caccc2";
-const DEFAULT_BASIC_BUTTON_COLOR        = "#dadad0";   
-const DEFAULT_BASIC_BUTTON_BORDER_COLOR = "#7f7f77";   
-const ACTIVE_BORDER_COLOR               = '#ffffff';   
+//	view tracking modes and the buttons that show them
+const VIEW_MODE_BUTTONS = 
+[
+    [ 'viewWholePoolButton', 'WHOLE_POOL' ],
+    [ 'viewAutoTrackButton', 'AUTOTRACK'  ],
+    [ 'viewSelectedButton',  'SELECTED'   ],
+    [ 'viewMutualButton',    'MUTUAL'     ],
+    [ 'viewProlificButton',  'PROLIFIC'   ],
+    [ 'viewEfficientButton', 'EFFICIENT'  ],
+    [ 'viewVirginButton',    'VIRGIN'     ],
+    [ 'viewGluttonButton',   'HUNGRY'     ]
+];
+
+const MENU_PANELS = 
+{
+    menuPoolButton    : 'poolPanel',
+    menuSwimbotButton : 'swimbotPanel',
+    menuTweakButton   : 'tweakPanel',
+    menuGraphButton   : 'graphPanel',
+    menuInfoButton    : 'infoPanel'
+};
+
+//	colors used by the graph legend (match graph.js)
+const LEGEND_SWIMBOT_COLOR  = "#ff8a5b";
+const LEGEND_FOODBIT_COLOR  = "#5ee07a";
+const LEGEND_FOODBIT1_COLOR = "#5aa9ff";
 
 const UI_UPDATE_PERIOD = 500;
 
@@ -30,7 +52,24 @@ let _currentInfoPage            = FIRST_INFO_PAGE;
 let _graph                      = new Graph(); 
 let _tweakGenesCategory         = 0;
 let _runningFast                = false;
-let _controlPanelWidth          = 400;
+
+//-----------------------------------------------------------------
+// show/hide and highlight elements with CSS classes (see genepool.css)
+//-----------------------------------------------------------------
+function setShown( id, shown )
+{
+    document.getElementById( id ).classList.toggle( 'hidden', ! shown );
+}
+
+function isShown( id )
+{
+    return ! document.getElementById( id ).classList.contains( 'hidden' );
+}
+
+function setActive( id, active )
+{
+    document.getElementById( id ).classList.toggle( 'active', active );
+}
 
 //----------------------------
 function initializeUI()
@@ -52,18 +91,8 @@ function initializeUI()
 
 function enableControlPanel( state )
 {
-	if (state == true) {
-		_controlPanelWidth = 400;
-		var panel = document.getElementById('masterPanel');
-		panel.style.display = 'block';
-		resize();
-	}
-	else {
-		_controlPanelWidth = 0;
-		var panel = document.getElementById('masterPanel');
-		panel.style.display = 'none';
-		resize();
-	}
+	setShown( 'masterPanel', state );
+	resize();
 }
 
 
@@ -108,8 +137,8 @@ function chooseAttraction()
                 
                 else if ( value === "similarColor"      ) { attraction = ATTRACTION_SIMILAR_COLOR;      }
                 else if ( value === "similarSize"       ) { attraction = ATTRACTION_SIMILAR_SIZE;       }
-                else if ( value === "similatHyper"      ) { attraction = ATTRACTION_SIMILAR_HYPER;      }
-                else if ( value === "similatLength"     ) { attraction = ATTRACTION_SIMILAR_LENGTH;     }
+                else if ( value === "similarHyper"      ) { attraction = ATTRACTION_SIMILAR_HYPER;      }
+                else if ( value === "similarLength"     ) { attraction = ATTRACTION_SIMILAR_LENGTH;     }
                 else if ( value === "similarStraight"   ) { attraction = ATTRACTION_SIMILAR_STRAIGHT;   }
                 
                 else if ( value === "random"            ) { attraction = ATTRACTION_RANDOM;             }
@@ -126,9 +155,7 @@ function chooseAttraction()
 //-------------------------
 function openTweakPanel()
 {
-    document.getElementById('tweakPanel' ).style.visibility = 'visible';		        
-
-    document.getElementById( 'tweakDefaultButton' ).style.visibility = 'visible';
+    setShown( 'tweakPanel', true );
     updateEcosystemUI();
 }    
 
@@ -245,30 +272,11 @@ function updateEcosystemUI()
 //----------------------------
 function closeAllPanels()
 {
-    document.getElementById('poolPanel'    ).style.visibility = 'hidden';		        
-    document.getElementById('swimbotPanel' ).style.visibility = 'hidden';		        
-    document.getElementById('graphPanel'   ).style.visibility = 'hidden';		        
-    document.getElementById('tweakPanel'   ).style.visibility = 'hidden';		        
-    document.getElementById('infoPanel'    ).style.visibility = 'hidden';		        
-    document.getElementById('infoText'     ).style.visibility = 'hidden';
-    
-    document.getElementById('prevInfoButton' ).style.visibility = 'hidden';	
-    document.getElementById('nextInfoButton' ).style.visibility = 'hidden';	
-    
-    document.getElementById('noSelectedSwimbotPanel' ).style.visibility = 'hidden';	
-    document.getElementById('selectedSwimbotPanel'   ).style.visibility = 'hidden';	
-
-    document.getElementById('menuPoolButton'    ).style.top = 0;		        
-    document.getElementById('menuSwimbotButton' ).style.top = 0;			        
-    document.getElementById('menuTweakButton'   ).style.top = 0;			        
-    document.getElementById('menuInfoButton'    ).style.top = 0;			        
-    document.getElementById('menuGraphButton'   ).style.top = 0;	
-    
-    document.getElementById( 'menuPoolButton'    ).style = "border-bottom-width: 3; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;"
-    document.getElementById( 'menuSwimbotButton' ).style = "border-bottom-width: 3; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;"
-    document.getElementById( 'menuTweakButton'   ).style = "border-bottom-width: 3; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;"
-    document.getElementById( 'menuInfoButton'    ).style = "border-bottom-width: 3; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;"
-    document.getElementById( 'menuGraphButton'   ).style = "border-bottom-width: 3; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;"
+    for ( const buttonID in MENU_PANELS )
+    {
+        setShown ( MENU_PANELS[ buttonID ], false );
+        setActive( buttonID, false );
+    }
 
     closePopupPanel();		        
                     
@@ -281,61 +289,35 @@ function openPanel( buttonID )
 {
     closeAllPanels(); 
     
-    //console.log( "openPanel" );    
-    //document.getElementById( buttonID ).style.visibility = 'hidden';
-    
-    let panelID = 'poolPanel';
-            
-    if ( buttonID === 'menuPoolButton'      ) { panelID = 'poolPanel';      openPoolPanel();    }
-    if ( buttonID === 'menuSwimbotButton'   ) { panelID = 'swimbotPanel';   openSwimbotPanel(); }
-    if ( buttonID === 'menuTweakButton'     ) { panelID = 'tweakPanel';     openTweakPanel();   }
-    if ( buttonID === 'menuInfoButton'      ) { panelID = 'infoPanel';      openInfoPanel();    }
-    if ( buttonID === 'menuGraphButton'     ) { panelID = 'graphPanel';     openGraphPanel()    }
+    if ( buttonID === 'menuPoolButton'      ) { openPoolPanel();    }
+    if ( buttonID === 'menuSwimbotButton'   ) { openSwimbotPanel(); }
+    if ( buttonID === 'menuTweakButton'     ) { openTweakPanel();   }
+    if ( buttonID === 'menuInfoButton'      ) { openInfoPanel();    }
+    if ( buttonID === 'menuGraphButton'     ) { openGraphPanel();   }
 
-    document.getElementById( buttonID ).style = "border-bottom-width: 0; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;"
-    
-    
-    document.getElementById( buttonID ).style.backgroundColor = DEFAULT_BASIC_PANEL_COLOR;
-    
-    
-    document.getElementById( buttonID ).style.top = 3;
+    setActive( buttonID, true );
 }
 
 
 //--------------------------
 function openPoolPanel()
 {
-    document.getElementById( 'poolPanel' ).style.visibility = 'visible'; 
+    setShown( 'poolPanel', true );
 }
 
 //--------------------------
 function openGraphPanel()
 {
-    document.getElementById( 'graphPanel' ).style.visibility = 'visible'; 
+    setShown( 'graphPanel', true );
+    updateGraphPanel();
 }
 
 //--------------------------
 function openSwimbotPanel()
 {
-    //console.log( "openSwimbotPanel" );    
-
-    document.getElementById('swimbotPanel' ).style.visibility = 'visible';		        
-  
-    if ( genePool.getASwimbotIsSelected() )
-    {
-        //console.log( "openSwimbotPanel ----SELECTED!" );
-        document.getElementById( 'selectedSwimbotPanel'   ).style.visibility = 'visible';		        	        
-        document.getElementById( 'noSelectedSwimbotPanel' ).style.visibility = 'hidden';
-    }		    
-    else
-    {
-        //console.log( "openSwimbotPanel ----NOT SELECTED!" );
-        document.getElementById( 'selectedSwimbotPanel'   ).style.visibility = 'hidden';		        	        
-        document.getElementById( 'noSelectedSwimbotPanel' ).style.visibility = 'visible';
-    }		    
+    setShown( 'swimbotPanel', true );
+    updateSwimbotPanel();
 }    
-
-
 
 
 //------------------------------------------------
@@ -343,100 +325,62 @@ function openTweakGenesPanel( selectedSwimbotID )
 {
     if ( selectedSwimbotID != NULL_INDEX )
     {
-        document.getElementById( 'tweakGenesPanel'      ).style.visibility = 'visible';		        	        
-        document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "visible"; 
+        setShown( 'tweakGenesModal', true );
 
-        document.getElementById( 'tweakGenesPanel' ).innerHTML = "<div id = 'tweakGenesTitle' >Tweak the genes of swimbot " + selectedSwimbotID + "</div>"; 
-        document.getElementById( 'tweakGenesPanel' ).innerHTML += "<div id = 'tweakGenesCategoryNote' >(choose which limb type to tweak)</div>"; 
+        let html = "<div class = 'gene-title'>Tweak the genes of swimbot " + selectedSwimbotID + "</div>"
+                 + "<div class = 'gene-note'>Choose which limb type to tweak:</div>"
+                 + "<div class = 'gene-categories'>";
 
         let numCategories = genePool.getNumGeneCategories();        
         for (let c=0; c<numCategories; c++)
         {
-            document.getElementById( 'tweakGenesPanel' ).innerHTML            
-            += "<div id = 'category" + (c+1) + "' >" + (c+1)
-            +  "<input "
-            +  "type         = 'radio' " 
-            +  "id           = 'geneTweakerCategory" + c + "'"
-            +  "name         = 'geneTweakerCategory'" 
-            +  "oninput      = 'setGeneTweakCategory( " + selectedSwimbotID + ", " + c + ")' "
-            +  "onchange     = 'setGeneTweakCategory( " + selectedSwimbotID + ", " + c + ")' "
-            +  "></div>";
+            html += "<label class = 'radio-chip'>"
+                 +  "<input type = 'radio' id = 'geneTweakerCategory" + c + "' name = 'geneTweakerCategory' "
+                 +  "onchange = 'setGeneTweakCategory( " + selectedSwimbotID + ", " + c + ")'>"
+                 +  "<span>limb " + (c+1) + "</span></label>";
         }
+        html += "</div><div class = 'gene-list'>";
         
         let num = genePool.getNumGenesPerCategory();
         num += 2; //add the two first (global: non-category) genes
-        
-        let width = 150;
         
         for (let g=0; g<num; g++)
         {
             let geneTweakerName  = genePool.getGeneName(g);
             let geneTweakerValue = genePool.getGeneValue( selectedSwimbotID, g );
-            
-            let top = 60 + g * 20;
-            if ( g > 1 ) //skip the two first (global: non-category) genes
+
+            //	the first two genes are global; the rest belong to the chosen limb type
+            if ( g === 2 )
             {
-                top += 80.0;
+                html += "<div class = 'gene-divider'></div>";
             }
             
-            //----------------------------------------------------
-            // construct the gene value display
-            //----------------------------------------------------
-            document.getElementById( 'tweakGenesPanel' ).innerHTML            
-            += "<div class = 'geneTweakerValue' id = 'gene" + g + "Value' style = 'top:" + top + "px;'>" + geneTweakerValue + "</div>";
-
-            //----------------------------------------------------
-            // construct the slider
-            //----------------------------------------------------
-            document.getElementById( 'tweakGenesPanel' ).innerHTML            
-            += "<input "
-            +  "style        = 'top:" + ( top - 3 ) + "px; width:" + width + "px;'"
-            +  "type         = 'range' " 
-            +  "class        = 'geneTweakerSlider' "
-            +  "min          = '0'"
-            +  "max          = '255'"   
-            +  "value        = '" + geneTweakerValue + "'"   
-            +  "id           = 'geneTweaker" + g + "'"
-            +  "name         = 'geneTweaker" 
-            +  "step         = 1 "
-            +  "autocomplete = 'off' "
-            +  "oninput      = 'tweakGene( " + selectedSwimbotID + ", " + g + ")' "
-            +  ">";
-            
-            //----------------------------------------------------
-            // construct the gene name
-            //----------------------------------------------------
-            document.getElementById( 'tweakGenesPanel' ).innerHTML            
-            += "<div class = 'geneTweakerName' style = 'top:" + top + "px;'>" + geneTweakerName + "</div>";
+            html += "<label class = 'gene-row' for = 'geneTweaker" + g + "'>"
+                 +  "<span class = 'geneTweakerName' title = '" + geneTweakerName + "'>" + geneTweakerName + "</span>"
+                 +  "<input type = 'range' class = 'geneTweakerSlider' min = '0' max = '255' step = '1' autocomplete = 'off' "
+                 +  "value = '" + geneTweakerValue + "' id = 'geneTweaker" + g + "' name = 'geneTweaker' "
+                 +  "oninput = 'tweakGene( " + selectedSwimbotID + ", " + g + ")'>"
+                 +  "<span class = 'geneTweakerValue' id = 'gene" + g + "Value'>" + geneTweakerValue + "</span>"
+                 +  "</label>";
         }
-        
+        html += "</div>";
+
+        document.getElementById( 'tweakGenesPanel' ).innerHTML = html;
 
         //----------------------------------------------------
         // initialize tweak category
         //----------------------------------------------------
         _tweakGenesCategory = 0;
 
-        //----------------------------------------------------
-        // set radio button check status
-        //----------------------------------------------------
         let radioButtons = document.getElementsByName( 'geneTweakerCategory' );
-
         for (let i = 0; i < radioButtons.length; i++) 
         {
-            if ( i === _tweakGenesCategory ) 
-            {
-                radioButtons[i].checked = true;
-            }
-            else
-            {
-                radioButtons[i].checked = false;
-            }
+            radioButtons[i].checked = ( i === _tweakGenesCategory );
         }    
     }
     else
     {
-        document.getElementById( 'tweakGenesPanel'      ).style.visibility = 'hidden';		        	        
-        document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "hidden"; 
+        closeTweakGenesPanel();
     }    
 }
 
@@ -444,8 +388,7 @@ function openTweakGenesPanel( selectedSwimbotID )
 //----------------------------
 function closeTweakGenesPanel()
 {
-    document.getElementById( 'tweakGenesPanel'      ).style.visibility = "hidden"; 
-    document.getElementById( 'closeTweakGenesPanel' ).style.visibility = "hidden"; 
+    setShown( 'tweakGenesModal', false );
 }
 
 
@@ -479,20 +422,7 @@ function updateGeneSliders( selectedSwimbotID )
 //-------------------------
 function closePopupPanel()
 {
-    document.getElementById( 'popUpPanel'               ).style.visibility = 'hidden';
-    document.getElementById( 'cancelPopUpPanelButton'   ).style.visibility = 'hidden';
-    //document.getElementById( 'PopUpPanelError'          ).style.visibility = 'hidden';
-    //document.getElementById( 'cancelErrorButton'        ).style.visibility = 'hidden';  
-    //document.getElementById( 'popUpPanelInput'          ).style.visibility = 'hidden';
-    //document.getElementById( 'savePopUpPanelButton'     ).style.visibility = 'hidden';
-    //document.getElementById( 'noSavePopUpPanelButton'   ).style.visibility = 'hidden';
-    document.getElementById( 'tweakDefaultButton'       ).style.visibility = 'hidden';
-    //document.getElementById( 'submitFilenameButton'     ).style.visibility = 'hidden';
-    document.getElementById( 'dataDisplayButton'        ).style.visibility = "hidden";
-    
-// I don't know why these are popping an error that they don't exist.... ??     
-//document.getElementById( "PopupText"                ).style.visibility = "hidden";   
-//document.getElementById( "loadedList"               ).style.visibility = "hidden";   
+    setShown( 'popUpModal', false );
     
     //---------------------------------------------------------------------   
     // move focus to the canvas in case it had been on the popup input  
@@ -525,22 +455,24 @@ function closeErrorPanel()
 
 
 
+//-------------------------------------------------------------
+// reflect the simulation's toggle states on the option buttons
+//-------------------------------------------------------------
+function syncToggleButtons()
+{
+    if ( typeof genePool == "undefined" ) return;
 
+    setActive( 'freezeButton',   ! genePool.getSimulationRunning() );
+    setActive( 'fastButton',     _runningFast );
+    setActive( 'viewGoalButton', genePool.getRenderingGoals() );
+    setActive( 'noRenderButton', ! genePool.getRendering() );
+}
 
 //----------------------------------
 function toggleSimulationRunning()
 {
-    if ( genePool.getSimulationRunning() )
-    {
-        genePool.setSimulationRunning( false ); 
-        document.getElementById( "freezeButton" ).style.borderColor = ACTIVE_BORDER_COLOR;             
-        document.getElementById( "freezeButton" ).style.borderWidth = "3px";   
-    }
-    else
-    {
-        genePool.setSimulationRunning( true ); 
-        document.getElementById( "freezeButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;                
-    }
+    genePool.setSimulationRunning( ! genePool.getSimulationRunning() ); 
+    syncToggleButtons();
 }
 
 //----------------------------------
@@ -550,71 +482,29 @@ function toggleFastRendering()
     {
         _runningFast = false;
         genePool.setMillisecondsToDefault();
-        document.getElementById( "fastButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;                
     }
     else
     {
         _runningFast = true;
         genePool.setMillisecondsPerUpdate(0);
-        document.getElementById( "fastButton" ).style.borderColor       = ACTIVE_BORDER_COLOR;             
-        document.getElementById( "fastButton" ).style.borderWidth =  "3px";   
     }
+    syncToggleButtons();
 }
 
 
 //-------------------------
 function toggleRendering()
 {
-    if ( genePool.getRendering() )
-    {
-        setRendering( false );
-    }
-    else
-    {
-        setRendering( true ); 
-    }
+    setRendering( ! genePool.getRendering() );
 }
 
 //-------------------------
 function setRendering(r)
 {
-    if ( r )
-    {
-        genePool.setRendering( true ); 
-        //document.getElementById( "noRenderButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR      
-        //document.getElementById( "noRenderButton" ).style.zIndex = '4';                     
-        //document.getElementById( "noRenderButton" ).style.zIndex = '1';     
-        
-        
-                        
-        canvasID.style.visibility = 'visible';
-        document.getElementById( "noRenderPanel" ).style.visibility = 'hidden';
-
-        /*
-        _runningFast = false;
-        genePool.setMillisecondsPerUpdate( 20 );
-        document.getElementById( "fastButton" ).style = "border-color: #666659;"                
-        */
-    }
-    else
-    {
-        genePool.setRendering( false ); 
-        //document.getElementById( "noRenderButton" ).style = "border-color: " + ACTIVE_BORDER_COLOR + ";"                     
-        //document.getElementById( "noRenderButton" ).style.borderWidth =  "3px";   
-
-        //document.getElementById( "noRenderButton" ).style.content = 'fdf';       
-                
-
-        //document.getElementById( "noRenderButton" ).style.zIndex = '4';                     
-        canvasID.style.visibility = 'hidden';
-        document.getElementById( "noRenderPanel" ).style.visibility = 'visible';
-        
-        /*
-        _runningFast = true;
-        genePool.setMillisecondsPerUpdate(0);
-        document.getElementById( "fastButton" ).style = "border-color: " + ACTIVE_BORDER_COLOR + ";"                
-        */
-    }
+    genePool.setRendering( r ); 
+    canvasID.style.visibility = r ? 'visible' : 'hidden';
+    setShown( 'noRenderPanel', ! r );
+    syncToggleButtons();
 }
 
 
@@ -622,28 +512,13 @@ function setRendering(r)
 function toggleGoalOverlay()
 {
     genePool.toggleGoalOverlay();
-    
-    if ( genePool.getRenderingGoals() )
-    {
-        document.getElementById( "viewGoalButton" ).style = "border-color: " + ACTIVE_BORDER_COLOR    
-        document.getElementById( "viewGoalButton" ).style.borderWidth = "3px";   
-    }
-    else
-    {
-        document.getElementById( "viewGoalButton" ).style = "border-color: " + DEFAULT_BASIC_BUTTON_BORDER_COLOR;  
-        //document.getElementById( "viewGoalButton" ).style.borderWidth = "1px";   
-        //document.getElementById( "viewGoalButton" ).style.borderBottomWidth = "4px";   
-    }
+    syncToggleButtons();
 }
-
-
 
 
 //-------------------------------
 function clearViewMode()
 {
-    //console.log( "ui.js: clearViewMode");
-
     genePool.clearViewMode();
     clearViewModeButtons();
 }
@@ -652,70 +527,35 @@ function clearViewMode()
 //-------------------------------
 function clearViewModeButtons()
 {
-    //console.log( "clearViewModeButtons");
-
-    document.getElementById( 'viewWholePoolButton'  ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR;  
-    document.getElementById( 'viewAutoTrackButton'  ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewSelectedButton'   ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewMutualButton'     ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewProlificButton'   ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewEfficientButton'  ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewVirginButton'     ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-    document.getElementById( 'viewGluttonButton'    ).style.borderColor = DEFAULT_BASIC_BUTTON_BORDER_COLOR; 
-
-    document.getElementById( 'viewWholePoolButton'  ).style.borderWidth = "1px";   
-    document.getElementById( 'viewAutoTrackButton'  ).style.borderWidth = "1px";    
-    document.getElementById( 'viewSelectedButton'   ).style.borderWidth = "1px";    
-    document.getElementById( 'viewMutualButton'     ).style.borderWidth = "1px";    
-    document.getElementById( 'viewProlificButton'   ).style.borderWidth = "1px";    
-    document.getElementById( 'viewEfficientButton'  ).style.borderWidth = "1px";    
-    document.getElementById( 'viewVirginButton'     ).style.borderWidth = "1px";    
-    document.getElementById( 'viewGluttonButton'    ).style.borderWidth = "1px"; 
-
-    document.getElementById( 'viewWholePoolButton'  ).style.borderBottomWidth = "4px";   
-    document.getElementById( 'viewAutoTrackButton'  ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewSelectedButton'   ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewMutualButton'     ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewProlificButton'   ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewEfficientButton'  ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewVirginButton'     ).style.borderBottomWidth = "4px";    
-    document.getElementById( 'viewGluttonButton'    ).style.borderBottomWidth = "4px"; 
-    
-    
+    for ( const [ buttonID ] of VIEW_MODE_BUTTONS )
+    {
+        setActive( buttonID, false );
+    }
 }
 
+//----------------------------------------------------------
+// highlight the button for the simulation's current view mode
+//----------------------------------------------------------
+function syncViewModeButtons()
+{
+    if ( typeof genePool == "undefined" ) return;
 
-
+    let mode = genePool.getViewMode();
+    for ( const [ buttonID, modeName ] of VIEW_MODE_BUTTONS )
+    {
+        setActive( buttonID, mode === ViewTrackingMode[ modeName ] );
+    }
+}
 
 
 //---------------------------------------
 function setViewMode( buttonID, viewMode )
 {
-    //---------------------------
-    // clear out the buttons...
-    //---------------------------
-    clearViewModeButtons();
-
     genePool.setViewMode( viewMode );
-        
     closePopupPanel();		        
 
-    if ( buttonID === 'viewSelectedButton' )
-    {
-        if ( genePool.getSelectedSwimbotID() != -1 )
-        {
-            document.getElementById( buttonID ).style = "border-color: " + ACTIVE_BORDER_COLOR    
-            //document.getElementById( buttonID ).style.borderColor       = ACTIVE_BORDER_COLOR;             
-            document.getElementById( buttonID ).style.borderWidth =  "3px";   
-        }
-    }
-    else
-    {
-        document.getElementById( buttonID ).style = "border-color: " + ACTIVE_BORDER_COLOR    
-        //document.getElementById( buttonID ).style.borderColor       = ACTIVE_BORDER_COLOR;             
-        document.getElementById( buttonID ).style.borderWidth =  "3px";   
-    }
-
+    //	the simulation may refuse a mode (e.g. 'selected' with nothing selected)
+    syncViewModeButtons();
 }
 
 
@@ -884,8 +724,7 @@ function tweakGene( swimbotIndex, sliderIndex )
 //----------------------------
 function openInfoPanel()
 {		    
-    document.getElementById( 'infoPanel' ).style.visibility = 'visible'; 
-    document.getElementById( 'infoText'  ).style.visibility = 'visible';
+    setShown( 'infoPanel', true );
     
     //let the current page load up
     setInfoPage( _currentInfoPage );
@@ -943,124 +782,113 @@ function setInfoPage( pageNumber )
 //-----------------------
 function updateUI()
 {
-    //console.log( "updateUI" );
-    
     //-----------------------------------------------------------------------------------
     // check that we have a genePool......
     //-----------------------------------------------------------------------------------
-    let genePoolIsDefined = typeof genePool != 'undefined';
-    
-    if ( genePoolIsDefined )
+    if ( typeof genePool != 'undefined' )
     {    
-        //-----------------------------------------------------------------------------------
-        // update the view buttons...
-        //-----------------------------------------------------------------------------------
-        //console.log( "ui.js: updateUI: genePool.getViewMode() = " + genePool.getViewMode() ); 
-    
-        if ( genePool.getViewMode() === ViewTrackingMode.NULL )
-        {
-            clearViewModeButtons();
-        }
-    
-        //-----------------------------------------------------------------------------------
-        // update the swimbot panel....
-        //-----------------------------------------------------------------------------------
-        if ( document.getElementById( 'swimbotPanel' ).style.visibility === 'visible' )
-        {
-        
-//console.log( "OKAY OKAY OKAY OKAY " );        
-        
-            let selectedSwimbot = genePool.getSelectedSwimbotID();
-        
-            if ( selectedSwimbot === NULL_INDEX )
-            {
-                console.log( "selectedSwimbot = NULL_INDEX" );
-                document.getElementById( 'selectedSwimbotPanel'   ).style.visibility = 'hidden';		        	        
-                document.getElementById( 'noSelectedSwimbotPanel' ).style.visibility = 'visible';	        	        
-            }
-            else
-            {
-                console.log( "selectedSwimbot = " + selectedSwimbot );
-                document.getElementById( 'selectedSwimbotPanel'   ).style.visibility = 'visible';		        	        
-                document.getElementById( 'noSelectedSwimbotPanel' ).style.visibility = 'hidden';	
-            
-                let brainState = genePool.getSwimbotBrainState( selectedSwimbot );
-                let mateString = genePool.getSwimbotChosenMate( selectedSwimbot ).toString();
-                let goalDescription = "";
+        syncViewModeButtons();
+        syncToggleButtons();
 
-                     if ( brainState ===  BRAIN_STATE_RESTING            ) { goalDescription = "resting";                       }
-                else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_MATE   ) { goalDescription = "looking for mate";              }
-                else if ( brainState ===  BRAIN_STATE_PURSUING_MATE      ) { goalDescription = "pursuing mate " + mateString;   }
-                else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { goalDescription = "looking for food bit";          }
-                else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { goalDescription = "pursuing food bit";             }
-                
-                let foodPreferenceText = "green";
-                let foodTypeText       = "green";
-
-                if ( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) === 1 ) { foodPreferenceText = "blue"; }
-                if ( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) === 1 ) { foodTypeText       = "blue"; }
-            
-                document.getElementById( 'swimbotDataPanel' ).innerHTML
-                = "<b>Info about the selected swimbot:</b>"
-                + "<br>"
-                + "<br>"
-                + "ID = " + genePool.getSwimbotIndex( selectedSwimbot ).toString()
-                + "<br>"
-                + "age = " + genePool.getSwimbotAge( selectedSwimbot ).toString()
-                + "<br>"
-                + "goal = " + goalDescription
-                + "<br>"
-                + "<br>"
-                + "food type preference = " + foodPreferenceText
-                + "<br>"
-                + "best-digested food type = " + foodTypeText
-                + "<br>"
-                + "number of food bits eaten = " + Math.floor( genePool.getSwimbotNumFoodBitsEaten( selectedSwimbot ).toString() )
-                + "<br>"
-                + "energy = " + Math.floor( genePool.getSwimbotEnergy( selectedSwimbot ).toString() )
-                + "<br>"
-                + "<br>"
-                + "sexual attraction = " + genePool.getSwimbotAttractionDescription( selectedSwimbot )
-                + "<br>"
-                + "number of offspring = " + Math.floor( genePool.getSwimbotNumOffspring( selectedSwimbot ).toString() );
-            }              
+        if ( isShown( 'swimbotPanel' ) )
+        {
+            updateSwimbotPanel();
         }
 
         //-----------------------------------------------------------------------------------
-        // always update the graph....
+        // always update the graph data, but only draw it when it is showing
         //-----------------------------------------------------------------------------------
-        if ( genePoolIsDefined )
-        {    
-            //_graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() );
-            _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() , genePool.getNumFoodBits1() );
-        }
+        _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() , genePool.getNumFoodBits1() );
     
-        //-----------------------------------------------------------------------------------
-        // render the graph....
-        //-----------------------------------------------------------------------------------
-        if ( document.getElementById( 'graphPanel' ).style.visibility === 'visible' )
+        if ( isShown( 'graphPanel' ) )
         {
-            document.getElementById( 'graphData' ).innerHTML
-            = "time step: " + genePool.getTimeStep()
-            + "<br>"
-            + "swimbots: " + genePool.getNumSwimbots()
-            + "<br>"
-            + "food bits: " + genePool.getNumFoodBits()
-            
-            
-            + "<br>"
-            + "food bits 1: " + genePool.getNumFoodBits1();
-            
-            _graph.render();
+            updateGraphPanel();
         }
     }
     
     //---------------------------
     // trigger next update...
     //---------------------------
-    //this.timer = setTimeout( "updateUI()", 100 );
     setTimeout( "updateUI()", UI_UPDATE_PERIOD );
 }	
+
+
+//---------------------------------------------------------
+// show either the selected swimbot's details or the presets
+//---------------------------------------------------------
+function updateSwimbotPanel()
+{
+    let selectedSwimbot = genePool.getSelectedSwimbotID();
+
+    setShown( 'selectedSwimbotPanel',   selectedSwimbot !== NULL_INDEX );
+    setShown( 'noSelectedSwimbotPanel', selectedSwimbot === NULL_INDEX );
+
+    if ( selectedSwimbot === NULL_INDEX ) return;
+
+    let brainState = genePool.getSwimbotBrainState( selectedSwimbot );
+    let mateString = genePool.getSwimbotChosenMate( selectedSwimbot ).toString();
+    let goalDescription = "";
+
+         if ( brainState ===  BRAIN_STATE_RESTING            ) { goalDescription = "resting";                       }
+    else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_MATE   ) { goalDescription = "looking for mate";              }
+    else if ( brainState ===  BRAIN_STATE_PURSUING_MATE      ) { goalDescription = "pursuing mate " + mateString;   }
+    else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { goalDescription = "looking for food";              }
+    else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { goalDescription = "pursuing food";                 }
+
+    let foodText = function( type )
+    {
+        let color = ( type === 1 ) ? LEGEND_FOODBIT1_COLOR : LEGEND_FOODBIT_COLOR;
+        let name  = ( type === 1 ) ? "blue" : "green";
+        return "<span class = 'food-dot' style = 'background:" + color + "'></span>" + name;
+    }
+
+    let stat = function( label, value, full )
+    {
+        return "<div class = 'stat" + ( full ? " full" : "" ) + "'>"
+             + "<div class = 'stat-label'>" + label + "</div>"
+             + "<div class = 'stat-value'>" + value + "</div></div>";
+    }
+
+    document.getElementById( 'swimbotDataPanel' ).innerHTML
+    = "<div class = 'swimbot-header'>"
+    +   "<div class = 'swimbot-name'>Swimbot " + genePool.getSwimbotIndex( selectedSwimbot ) + "</div>"
+    +   "<div class = 'swimbot-goal'>" + goalDescription + "</div>"
+    + "</div>"
+    + "<div class = 'stat-grid'>"
+    +   stat( "age",               genePool.getSwimbotAge( selectedSwimbot ) )
+    +   stat( "energy",            Math.floor( genePool.getSwimbotEnergy( selectedSwimbot ) ) )
+    +   stat( "food bits eaten",   Math.floor( genePool.getSwimbotNumFoodBitsEaten( selectedSwimbot ) ) )
+    +   stat( "offspring",         Math.floor( genePool.getSwimbotNumOffspring( selectedSwimbot ) ) )
+    +   stat( "prefers food",      foodText( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) ) )
+    +   stat( "digests best",      foodText( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) ) )
+    +   stat( "sexual attraction", genePool.getSwimbotAttractionDescription( selectedSwimbot ), true )
+    + "</div>";
+}
+
+
+//-----------------------------------
+// population numbers + graph drawing
+//-----------------------------------
+function updateGraphPanel()
+{
+    let item = function( color, label, value )
+    {
+        return "<div class = 'legend-item'>"
+             + "<span class = 'legend-swatch' style = 'background:" + color + "'></span>"
+             + "<div><div class = 'legend-label'>" + label + "</div>"
+             + "<div class = 'legend-value'>" + value + "</div></div></div>";
+    }
+
+    document.getElementById( 'graphData' ).innerHTML
+    = "<div class = 'legend'>"
+    + item( "rgba(255,255,255,0.35)", "time step",        genePool.getTimeStep()     )
+    + item( LEGEND_SWIMBOT_COLOR,     "swimbots",         genePool.getNumSwimbots()  )
+    + item( LEGEND_FOODBIT_COLOR,     "green food bits",  genePool.getNumFoodBits()  )
+    + item( LEGEND_FOODBIT1_COLOR,    "blue food bits",   genePool.getNumFoodBits1() )
+    + "</div>";
+
+    _graph.render();
+}
 
 
 //----------------------------------------
@@ -1070,71 +898,40 @@ function notifyGeneTweakPanelMouseDown()
     
     if ( selectedSwimbotID === -1 )
     {
-        //console.log( "NULL" );
         closeTweakGenesPanel();
     }
-    else
-    {
-        if ( document.getElementById( 'tweakGenesPanel' ).style.visibility === 'visible' )
-        {		        	        
-            console.log( selectedSwimbotID );
-            openTweakGenesPanel( selectedSwimbotID );
-        }
+    else if ( isShown( 'tweakGenesModal' ) )
+    {		        	        
+        openTweakGenesPanel( selectedSwimbotID );
     }
 }
 
 
-
-//----------------------
-// under construction
-//----------------------
+//----------------------------------------------------------
+// size the pool canvas to fill the stage (left of the panel)
+//----------------------------------------------------------
 function resize()
 { 
-    let rightMargin = _controlPanelWidth;
+    let stage = document.getElementById( 'stage' );
 
-    // I can't get this to work...
-    /*
-    let masterPanel = document.getElementById( "masterPanel" );
-    let masterPanelStyle = window.getComputedStyle( masterPanel, null );
-    console.log( masterPanelStyle.width.toString() )      
-    let rightMargin = masterPanelStyle.width;
-	//
-	//	JV - Try this:
-	//
-	//		let width = parseFloat(masterPanelStyle.width);
-	//
-	//	to convert width to a usable number (BPD)
-    */
-
-    let width  = window.innerWidth  - rightMargin;
-    let height = window.innerHeight;
+    canvasID.width  = Math.max( 1, stage.clientWidth  );
+    canvasID.height = Math.max( 1, stage.clientHeight );
     
-//if ( width  < rightMargin ) { width = rightMargin; }
-    
-    canvasID.width  = width;
-    canvasID.height = height - 15;
-    
-///temp fix until I fix the simulation to take non-square proportions    
-//canvasID.height = canvasID.width;    // make it square...
-
-//canvasID.width = canvasID.height;
-    
-    let genePoolIsDefined = typeof genePool != 'undefined';
-    if ( genePoolIsDefined )
+    if ( typeof genePool != 'undefined' )
     {    
         genePool.setCanvasDimensions( canvasID.width, canvasID.height );  
     }
-
-    // this successfully places an image in the background, and I can use clearRect 
-    // instead of fillrect in pool.render, but I don't yet know how to make the image scroll.
-    
-    /*
-    canvasID.style.backgroundImage = "url( 'images/background.png' )";  
-    canvasID.style.backgroundSize = canvasID.width + "px " + canvasID.height + "px";        
-    canvasID.style.backgroundRepeat = "no-repeat";    
-    */
-    
 }
+
+//	the stage changes size when the window or the panel does
+new ResizeObserver( function() { resize(); } ).observe( document.getElementById( 'stage' ) );
+
+
+//------------------------------------------------------------
+// pointer position relative to the pool canvas
+//------------------------------------------------------------
+function canvasX( e ) { return e.clientX - canvasID.getBoundingClientRect().left; }
+function canvasY( e ) { return e.clientY - canvasID.getBoundingClientRect().top;  }
 
 
 //------------------------------------------------------------
@@ -1144,7 +941,7 @@ document.getElementById( 'Canvas' ).onmousedown = function(e)
 
     if ( typeof genePool != "undefined" ) 
     {    
-        genePool.touchDown( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );  
+        genePool.touchDown( canvasX( e ), canvasY( e ) );  
     }
         
     notifyGeneTweakPanelMouseDown();
@@ -1155,7 +952,7 @@ document.getElementById( 'Canvas' ).onmousemove = function(e)
 {
     if ( typeof genePool != "undefined" ) 
     {    
-        genePool.touchMove( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );
+        genePool.touchMove( canvasX( e ), canvasY( e ) );
     }
 }
 
@@ -1164,7 +961,7 @@ document.getElementById( 'Canvas' ).onmouseup = function(e)
 {
     if ( typeof genePool != "undefined" ) 
     {    
-        genePool.touchUp( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );
+        genePool.touchUp( canvasX( e ), canvasY( e ) );
     } 			
 }
 
@@ -1173,9 +970,30 @@ document.getElementById( 'Canvas' ).onmouseout = function(e)
 {
     if ( typeof genePool != "undefined" ) 
     {    
-        genePool.touchOut( e.pageX - document.getElementById( 'Canvas' ).offsetLeft, e.pageY - document.getElementById( 'Canvas' ).offsetTop );
+        genePool.touchOut( canvasX( e ), canvasY( e ) );
     } 			
 }
+
+
+//------------------------------------------------------------
+// mouse wheel zooms in and out around the mouse position
+//------------------------------------------------------------
+document.getElementById( 'Canvas' ).addEventListener( 'wheel', function(e) 
+{
+    e.preventDefault();
+
+    if ( typeof genePool != "undefined" ) 
+    {    
+        clearViewMode();
+
+        let delta = e.deltaY;
+        if ( e.deltaMode === 1 ) { delta *= 16;  }  // scrolling by lines
+        if ( e.deltaMode === 2 ) { delta *= 400; }  // scrolling by pages
+
+        let factor = Math.exp( delta * 0.0015 );    // one wheel notch is about 15%
+        genePool.zoomAtScreenPosition( canvasX( e ), canvasY( e ), factor );
+    }
+}, { passive: false } );
 
 
 /*

@@ -847,8 +847,7 @@ for (let n=0; n<familyTree.getNumNodes(); n +=THROTTLE )
     // the following code displays the data in a div element:
     //-------------------------------------------------------------------
     /*
-    document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-    document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+    setShown( 'dataDisplayModal', true ); 
     document.getElementById( 'dataDisplay'      ).innerHTML 
     = 
     "<br>" 
@@ -923,7 +922,7 @@ function openPopupPanelForInput( text, mode )
     //----------------------------------------------------------------------------------   
     document.getElementById( 'noSavePopUpPanelButton'   ).style.visibility = "hidden";   
     document.getElementById( 'savePopUpPanelButton'     ).style.visibility = "hidden";  
-    document.getElementById( 'dataDisplayButton'        ).style.visibility = "hidden";    
+    setShown( 'dataDisplayButton', false );    
 
 
     //----------------------------------------------------------------------------------    
@@ -1000,7 +999,7 @@ function openPopupPanelForInput( text, mode )
         //----------------------------------------------------   
         // give user option to display data...  
         //----------------------------------------------------   
-        document.getElementById( 'dataDisplayButton'    ).style.visibility = "visible";   
+        setShown( 'dataDisplayButton', true );   
     }
     else if ( _inputMode === InputMode.LOAD_SWIMBOT_FROM_FILE )
     {
@@ -1111,8 +1110,7 @@ function displayData( filename )
             let json = JSON.stringify( { genes } );
             //console.log( json );
             
-            document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-            document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+            setShown( 'dataDisplayModal', true ); 
             document.getElementById( 'dataDisplay'      ).innerHTML 
             = "Copy the text below, put it in a new text file, and then give"
             + "<br>" 
@@ -1133,8 +1131,7 @@ function displayData( filename )
         let pool = genePool.getPoolData();
         let json = JSON.stringify( { pool } );
 
-        document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-        document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+        setShown( 'dataDisplayModal', true ); 
         document.getElementById( 'dataDisplay'      ).innerHTML
         = "Copy the text below, put it in a new text file, and then give"
         + "<br>" 
@@ -1158,8 +1155,7 @@ function showSwimbotGenes(s)
         let json = JSON.stringify( { genes } );
         //console.log( json );
     
-        document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-        document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+        setShown( 'dataDisplayModal', true ); 
         document.getElementById( 'dataDisplay'      ).innerHTML 
         = "<br>" 
         + "<big><b>Save genes of swimbot " + s.toString() + "</b></big>"
@@ -1185,7 +1181,6 @@ function showSwimbotGenes(s)
 //----------------------------
 function closeDataDisplay()
 {
-    document.getElementById( 'dataDisplay'      ).style.visibility = "hidden"; 
-    document.getElementById( 'closeDataDisplay' ).style.visibility = "hidden"; 
+    setShown( 'dataDisplayModal', false ); 
 }
 

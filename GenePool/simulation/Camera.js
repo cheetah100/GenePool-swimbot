@@ -22,7 +22,7 @@ function Camera()
 	const DRAG_FORCE            =  0.03;
     const PAN_OVERSHOOT_PUSH 	=  0.7;
     const SCALE_OVERSHOOT_PUSH	=  0.7;
-    const MINIMUM_SCALE 		=  500.0;
+    const MINIMUM_SCALE 		=  100.0;
     
 	//------------------------------------------
 	// members
@@ -234,6 +234,39 @@ function Camera()
     }
     
     
+	//----------------------------------------------------------------
+	// pan by an exact amount in pool units (grab-and-drag)
+	//----------------------------------------------------------------
+	this.panBy = function( x, y )
+	{
+		_position.x += x;
+		_position.y += y;
+		_velocity.clear();
+
+        calculateFrame();
+        applyConstraints();
+	}
+
+	//----------------------------------------------------------------
+	// zoom by a factor, keeping the pool point (x, y) fixed on screen
+	//----------------------------------------------------------------
+	this.zoomAt = function( factor, x, y )
+	{
+		let newScale = _scale * factor;
+		if ( newScale < _minimumScale ) { newScale = _minimumScale; }
+		if ( newScale > POOL_WIDTH    ) { newScale = POOL_WIDTH;    }
+
+		let f = newScale / _scale;
+		_position.x = x + ( _position.x - x ) * f;
+		_position.y = y + ( _position.y - y ) * f;
+		_scale      = newScale;
+		_scaleDelta = ZERO;
+		_velocity.clear();
+
+        calculateFrame();
+        applyConstraints();
+	}
+
 	//--------------------------------------
 	this.setPosition = function( position )
 	{	
