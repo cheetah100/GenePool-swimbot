@@ -1184,3 +1184,76 @@ function closeDataDisplay()
     setShown( 'dataDisplayModal', false ); 
 }
 
+
+
+//=======================================================================================
+//  Save / load a whole pool as a .json file
+//=======================================================================================
+
+//-----------------------------------------------------------------------
+// download the pool (swimbots, genes, food, settings, camera)
+//-----------------------------------------------------------------------
+function savePoolToFile()
+{
+    let data = genePool.getPoolData();
+    let blob = new Blob( [ JSON.stringify( data ) ], { type: "application/json" } );
+    let link = document.createElement( 'a' );
+
+    link.href     = URL.createObjectURL( blob );
+    link.download = "genepool-" + data.timeStep + ".json";
+    document.body.appendChild( link );
+    link.click();
+    link.remove();
+    setTimeout( function() { URL.revokeObjectURL( link.href ); }, 10000 );
+
+    showSaveLoadStatus( "Saved " + data.numSwimbots + " swimbots at time step " + data.timeStep + "." );
+}
+
+//-----------------------------------------------------------------------
+// replace the current pool with one from a file chosen by the user
+//-----------------------------------------------------------------------
+function loadPoolFromFile( event )
+{
+    let file = event.target.files[0];
+    event.target.value = "";    // so the same file can be chosen again
+    if ( ! file ) return;
+
+    let reader = new FileReader();
+    reader.onload = function()
+    {
+        let data = null;
+        try 
+        { 
+            data = JSON.parse( reader.result ); 
+        } 
+        catch ( e ) 
+        { 
+            showSaveLoadStatus( "That file isn't a saved Gene Pool (it isn't valid JSON)." ); 
+            return; 
+        }
+
+        if ( ! Array.isArray( data.swimbotArray ) || ! Array.isArray( data.foodBitArray ) )
+        {
+            showSaveLoadStatus( "That file doesn't look like a saved Gene Pool." );
+            return;
+        }
+
+        genePool.setPoolData( data );
+
+        closeTweakGenesPanel();
+        clearViewMode();
+        updateEcosystemUI();
+        _graph.initialize();
+        setRendering( true );
+        syncToggleButtons();
+
+        showSaveLoadStatus( "Loaded " + data.swimbotArray.length + " swimbots at time step " + ( data.timeStep || 0 ) + "." );
+    };
+    reader.readAsText( file );
+}
+
+//-----------------------------------------------------------------------
+function showSaveLoadStatus( text )
+{
+    document.getElementById( 'saveLoadStatus' ).textContent = text;
+}

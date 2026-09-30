@@ -162,7 +162,8 @@ function SwimbotRenderer( glView )
                         if ( _renderingGenitalsAndMouths )
                         {
                             if (( _brain.getState() == BRAIN_STATE_LOOKING_FOR_FOOD	)
-                            ||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD ))
+                            ||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD )
+                            ||  ( _brain.getState() == BRAIN_STATE_PURSUING_PREY ))
                             {	
 								_colorUtility = swimbot.calculatePartColor(1);  
                                 this.renderMouth();
@@ -446,7 +447,8 @@ else
         //--------------------------------------------------------
         // open jaws
         //--------------------------------------------------------
-        if ( _brain.getState() === BRAIN_STATE_PURSUING_FOOD )
+        if (( _brain.getState() === BRAIN_STATE_PURSUING_FOOD )
+        ||  ( _brain.getState() === BRAIN_STATE_PURSUING_PREY ))
         {
             leftEndX  -= endPerpX;
             leftEndY  -= endPerpY;

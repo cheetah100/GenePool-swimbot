@@ -73,6 +73,19 @@ var    flopperYV = 0;
 	let _species            = NULL_INDEX;
 	let _isSelected         = false;
 	let _selectedPart       = NULL_PART;
+	let _chosenPrey         = null;             // another swimbot I'm hunting
+	let _chosenPreyIndex    = NULL_INDEX;
+	let _preyTarget         = new Vector2D();   // point on the prey's body closest to my mouth
+	let _tryingToBite       = false;
+	let _biteTimer          = 0;
+	let _numBites           = 0;
+	let _diet               = DIET_HERBIVORE;
+	let _meatAdaptation     = ZERO;             // 0 (lives on food bits) to 1 (lives on meat)
+	let _chaseIndex         = NULL_INDEX;       // prey being tracked for progress
+	let _chaseBestGap       = ZERO;             // closest I've got to it
+	let _chaseStallSteps    = 0;                // steps since I last got closer
+	let _ignoredPreyIndex   = NULL_INDEX;       // prey I recently gave up on
+	let _ignoreTimer        = 0;
 	
 	let _lastPositionForEfficiencyMeasurement = new Vector2D();
     let _lastEnergyForEfficiencyMeasurement = ZERO;
@@ -86,6 +99,7 @@ var    flopperYV = 0;
 	this.getAge            = function() { return _age; }
 	this.getEnergy         = function() { return _energy; }
 	this.getGrowthScale    = function() { return _growthScale; }
+	this.getVelocity       = function() { return _velocity; }
 	this.getFocusDirection = function() { return _focusDirection; }
 
 	let _parent = null;	
@@ -526,6 +540,15 @@ _position.copyFrom( position );
 		_age		        = age;
 		_energy             = energy;
 		_alive		        = true;
+		_chosenPrey         = null;
+		_chosenPreyIndex    = NULL_INDEX;
+		_tryingToBite       = false;
+		_biteTimer          = 0;
+		_numBites           = 0;
+		_chaseIndex         = NULL_INDEX;
+		_chaseStallSteps    = 0;
+		_ignoredPreyIndex   = NULL_INDEX;
+		_ignoreTimer        = 0;
 		_growthScale        = ONE;
 		//_maximumLifeSpan    = DEFAULT_MAXIMUM_LIFESPAN;
 		
@@ -611,6 +634,22 @@ _position.copyFrom( position );
 	//---------------------------------------------------------------
     this.processPhenotype = function()
     {
+		//-----------------------------------------------------
+		// diet: how well does my food color match food bits?
+		//-----------------------------------------------------
+		let fc = _phenotype.foodColor;
+		let bestFoodBitMatch = ZERO;
+		for (let t=0; t<globalTweakers.numFoodTypes; t++)
+		{
+			let c = FOOD_BIT_COLORS[t];
+			bestFoodBitMatch = Math.max( bestFoodBitMatch, getFoodColorMatch( fc.red, fc.green, fc.blue, c[0], c[1], c[2] ) );
+		}
+		_meatAdaptation = ONE - bestFoodBitMatch;
+
+		     if ( bestFoodBitMatch >= HERBIVORE_FOOD_MATCH ) { _diet = DIET_HERBIVORE; }
+		else if ( bestFoodBitMatch <  CARNIVORE_FOOD_MATCH ) { _diet = DIET_CARNIVORE; }
+		else                                                 { _diet = DIET_OMNIVORE;  }
+
 		//-----------------------------------------------------
 		// calculate masses and total part length
 		//-----------------------------------------------------
@@ -771,6 +810,66 @@ _position.copyFrom( position );
             }
         }
 
+        //-------------------------------------------------
+        // I wanna bite the swimbot I'm hunting...
+        //-------------------------------------------------
+        if ( _biteTimer > 0 ) { _biteTimer --; }
+
+        if ( _ignoreTimer > 0 ) 
+        { 
+            _ignoreTimer --; 
+            if ( _ignoreTimer === 0 ) { _ignoredPreyIndex = NULL_INDEX; }
+        }
+
+        if ( _brain.getState() === BRAIN_STATE_PURSUING_PREY )
+        {
+            if ( this.getPreyIsValid() )
+            {
+                let reach    = _chosenPrey.getClosestBodyPointTo( this.getMouthPosition(), _preyTarget ) + PREY_BITE_REACH;
+                let distance = this.getMouthPosition().getDistanceTo( _preyTarget );
+
+                if (( distance < reach ) && ( _biteTimer === 0 ))
+                {
+                    _tryingToBite = true;
+                }
+
+                //----------------------------------------------------------
+                // am I catching up? if not for a while, give up the chase
+                //----------------------------------------------------------
+                let gap = distance - reach;
+
+                if ( _chosenPreyIndex !== _chaseIndex )
+                {
+                    _chaseIndex      = _chosenPreyIndex;
+                    _chaseBestGap    = gap;
+                    _chaseStallSteps = 0;
+                }
+                else if ( gap < _chaseBestGap - PREY_CHASE_PROGRESS )
+                {
+                    _chaseBestGap    = gap;
+                    _chaseStallSteps = 0;
+                }
+                else
+                {
+                    _chaseStallSteps ++;
+                }
+
+                if ( _chaseStallSteps > PREY_GIVE_UP_STEPS )
+                {
+                    _ignoredPreyIndex = _chosenPreyIndex;
+                    _ignoreTimer      = PREY_IGNORE_STEPS;
+                    _chosenPrey       = null;
+                    _chosenPreyIndex  = NULL_INDEX;
+                    _chaseIndex       = NULL_INDEX;
+                    _brain.setFoundPrey( false );
+                }
+            }
+            else
+            {
+                _brain.setFoundPrey( false );	// it got away (or died)
+            }
+        }
+
         //------------------------------------------
         // I wanna have sex with my chosen swimbot
         //------------------------------------------
@@ -812,6 +911,15 @@ _position.copyFrom( position );
             {
                 _directionToGoal.set( _chosenMate.getGenitalPosition() );	
                 _directionToGoal.subtract( _phenotype.parts[ GENITAL_INDEX ].position );
+                _directionToGoal.normalize();
+            }
+        }
+        else if ( _brain.getState() === BRAIN_STATE_PURSUING_PREY )
+        {
+            if ( this.getPreyIsValid() )
+            {
+                _directionToGoal.set( _preyTarget );	
+                _directionToGoal.subtract( this.getMouthPosition() );
                 _directionToGoal.normalize();
             }
         }
@@ -1275,6 +1383,21 @@ let partAccelerationY = -strokeForceY;
 	// get functions
 	//--------------------------------------------------------------------------------------------------------
 	this.getIsTryingToEat               = function() { return _tryingToEat;                                 }
+	this.getIsTryingToBite              = function() { return _tryingToBite;                                }
+	this.getFoodColor                   = function() { return _phenotype.foodColor;                         }
+	this.getDiet                        = function() { return _diet;                                        }
+	this.getMeatAdaptation              = function() { return _meatAdaptation;                              }
+	this.getNumBites                    = function() { return _numBites;                                    }
+	this.getChosenPreyIndex             = function() { return _chosenPreyIndex;                             }
+	this.getIgnoredPreyIndex            = function() { return _ignoredPreyIndex;                            }
+
+	//	lifetime stats, when loading a saved pool
+	this.restoreStats = function( numOffspring, numFoodBitsEaten, numBites )
+	{
+        _numOffspring     = numOffspring;
+        _numFoodBitsEaten = numFoodBitsEaten;
+        _numBites         = numBites;
+    }
 	this.getIsTryingToMate              = function() { return _tryingToMate;                                }
 	this.getIndex                       = function() { return _index;                                       }
 	this.getAge                         = function() { return _age;                                         }
@@ -1310,6 +1433,7 @@ let partAccelerationY = -strokeForceY;
         else if ( brainState ===  BRAIN_STATE_PURSUING_MATE      ) { return "pursuing mate";        }
         else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { return "looking for food bit"; }
         else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { return "pursuing food bit";    }
+        else if ( brainState ===  BRAIN_STATE_PURSUING_PREY      ) { return "hunting";              }
                 
         return "(no goal identified)";
     }
@@ -1374,6 +1498,11 @@ let partAccelerationY = -strokeForceY;
         {	
             let energyFromFoodBit = _chosenFoodBit.getEnergy();
 
+            //	food that only partly matches my food color is less nourishing
+            let c  = _chosenFoodBit.getColor();
+            let fc = _phenotype.foodColor;
+            energyFromFoodBit *= getFoodColorMatch( fc.red, fc.green, fc.blue, c.red, c.green, c.blue );
+
             if ( globalTweakers.numFoodTypes > 1 )
             {
                 /*
@@ -1422,21 +1551,123 @@ let partAccelerationY = -strokeForceY;
     
     
 
+	//-----------------------------------------------------------------
+	// is the swimbot I'm hunting still there? (swimbot slots get reused)
+	//-----------------------------------------------------------------
+	this.getPreyIsValid = function()
+	{
+        return (( _chosenPrey != null )
+            &&  ( _chosenPrey !== this )
+            &&  ( _chosenPrey.getAlive() )
+            &&  ( _chosenPrey.getIndex() === _chosenPreyIndex ));
+    }
+
+	//-----------------------------------------------------------------
+	// how easy a catch is this swimbot for me? (0 to 1)
+	// young and weak prey are easier; prey outswimming me are harder
+	//-----------------------------------------------------------------
+	this.getVulnerabilityOf = function( prey )
+	{
+        let youth    = ONE - prey.getGrowthScale();
+        let weakness = ONE - Math.min( prey.getEnergy() / PREY_HEALTHY_ENERGY, ONE );
+        let easy     = PREY_BASE_VULNERABILITY + ( ONE - PREY_BASE_VULNERABILITY ) * Math.max( youth, weakness );
+
+        let dx = prey.getPosition().x - _position.x;
+        let dy = prey.getPosition().y - _position.y;
+        let distance  = Math.sqrt( dx * dx + dy * dy );
+        let awaySpeed = ( distance > ZERO ) ? ( prey.getVelocity().x * dx + prey.getVelocity().y * dy ) / distance : ZERO;
+        let fleeing   = Math.min( Math.max( awaySpeed / Math.max( _velocity.getMagnitude(), PREY_MIN_HUNTER_SPEED ), ZERO ), ONE );
+
+        return easy * ( ONE - PREY_AWAY_PENALTY * fleeing );
+    }
+
+	//-----------------------------------------------------------------
+	// take a bite out of my prey
+	//-----------------------------------------------------------------
+	this.biteChosenPrey = function()
+	{
+        _tryingToBite = false;
+
+        if ( ! this.getPreyIsValid() ) return;
+
+        let bite = Math.min( PREY_BITE_ENERGY, _chosenPrey.getEnergy() );
+
+        _chosenPrey.receiveBite( bite );
+        _energy += bite * PREY_MEAT_EFFICIENCY * _meatAdaptation;
+
+        _numBites ++;
+        _biteTimer = PREY_BITE_COOLDOWN;
+        _chaseStallSteps = 0;
+    }
+
+	//-----------------------------------------------------------------
+	// being bitten (death follows in updatePhysics if energy runs out)
+	//-----------------------------------------------------------------
+	this.receiveBite = function( amount )
+	{
+        _energy = Math.max( ZERO, _energy - amount );
+    }
+
+	//-----------------------------------------------------------------
+	// closest point on my body to 'point' (written into 'result');
+	// returns the half-width of that part so the caller can test reach
+	//-----------------------------------------------------------------
+	this.getClosestBodyPointTo = function( point, result )
+	{
+        let bestDistanceSquared = Number.MAX_VALUE;
+        let bestWidth = ZERO;
+
+        for (let p=1; p<_phenotype.numParts; p++)
+        {
+            let a = this.getPartParentPosition(p);
+            let b = _phenotype.parts[p].position;
+            let abx = b.x - a.x;
+            let aby = b.y - a.y;
+            let lengthSquared = abx * abx + aby * aby;
+            let t = ( lengthSquared > ZERO ) ? ( ( point.x - a.x ) * abx + ( point.y - a.y ) * aby ) / lengthSquared : ZERO;
+            t = Math.min( Math.max( t, ZERO ), ONE );
+
+            let x = a.x + abx * t;
+            let y = a.y + aby * t;
+            let distanceSquared = ( point.x - x ) * ( point.x - x ) + ( point.y - y ) * ( point.y - y );
+
+            if ( distanceSquared < bestDistanceSquared )
+            {
+                bestDistanceSquared = distanceSquared;
+                result.setXY( x, y );
+                bestWidth = _phenotype.parts[p].width;
+            }
+        }
+
+        return bestWidth;
+    }
+
+
 	//--------------------------------------------
 	// setEnvironmentalStimuli
 	//--------------------------------------------
-	this.setEnvironmentalStimuli = function( numNearbySwimbots, nearbySwimbotArray, foodBitWasFound, theFoodBit )
+	this.setEnvironmentalStimuli = function( numNearbySwimbots, nearbySwimbotArray, foodBitWasFound, theFoodBit, preyWasFound, thePrey )
     {
         //------------------------------------------------------------
         // if looking for a food bit, choose the one that was found
         //------------------------------------------------------------
         _chosenFoodBit = null;
         _chosenFoodBitIndex = NULL_INDEX;
+        _chosenPrey = null;
+        _chosenPreyIndex = NULL_INDEX;
         
         if (( _brain.getState() == BRAIN_STATE_LOOKING_FOR_FOOD )
-        ||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD ))
+        ||  ( _brain.getState() == BRAIN_STATE_PURSUING_FOOD )
+        ||  ( _brain.getState() == BRAIN_STATE_PURSUING_PREY ))
         {
             _brain.setFoundFoodBit( foodBitWasFound );
+            _brain.setFoundPrey( preyWasFound );
+
+            if ( preyWasFound )
+            {
+                _chosenPrey      = thePrey;
+                _chosenPreyIndex = thePrey.getIndex();
+            }
     
             if ( foodBitWasFound )
             {
@@ -1454,7 +1685,7 @@ let partAccelerationY = -strokeForceY;
         {			
             //console.log( "horny" );
             
-            let mostAttractiveFound = new Swimbot;
+            let mostAttractiveFound = null;     // (was a throwaway new Swimbot every search)
             let atLeastOneBabeIsVisible = false;
             let highestBabeFactor = -100.0;
 
@@ -1992,6 +2223,15 @@ v[p].setXY( _phenotype.parts[p].axis.x / _phenotype.parts[p].length, _phenotype.
         _alive 	  		    = false;
         _tryingToMate       = false;
         _tryingToEat        = false;
+        _chosenPrey         = null;
+        _chosenPreyIndex    = NULL_INDEX;
+        _tryingToBite       = false;
+        _biteTimer          = 0;
+        _numBites           = 0;
+        _chaseIndex         = NULL_INDEX;
+        _chaseStallSteps    = 0;
+        _ignoredPreyIndex   = NULL_INDEX;
+        _ignoreTimer        = 0;
         _growthScale        = ZERO;
         _torque             = ZERO;
         _angle			    = ZERO;

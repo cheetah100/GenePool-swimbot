@@ -28,6 +28,7 @@ function Graph()
     const GRAPH_FOODBIT_COLOR   = "#5ee07a";
     const GRAPH_FOODBIT_1_COLOR = "#5aa9ff";
     const GRAPH_SWIMBOT_COLOR   = "#ff8a5b";
+    const GRAPH_CARNIVORE_COLOR = "#ff4f8b";
     //const GRAPH_SWIMBOT_1_COLOR = "rgb( 200,  20, 200 )";
 
 
@@ -55,6 +56,7 @@ function Graph()
 	//let _numSwimbots1   = new Array(); 
 	let _numFoodBits    = new Array(); 
     let _numFoodBits1   = new Array(); //kind of a hack - but I wanna get it working first....
+    let _numCarnivores  = new Array();
  
 
 	//---------------------------
@@ -70,17 +72,19 @@ function Graph()
 	    //_numSwimbots1.length = 0;
         _numFoodBits.length  = 0;
         _numFoodBits1.length = 0;
+        _numCarnivores.length = 0;
 
 	    _time = [];
 	    _numSwimbots  = [];
 	    //_numSwimbots1 = [];
         _numFoodBits  = [];
         _numFoodBits1 = [];
+        _numCarnivores = [];
 	}
 
 
 	//---------------------------------------------------------------------
-	this.update = function( time, numSwimbots, numFoodBits, numFoodBits1 )
+	this.update = function( time, numSwimbots, numFoodBits, numFoodBits1, numCarnivores )
 	{	
         if ( _maxGraphCount	< 1000 )
         {
@@ -94,6 +98,7 @@ function Graph()
             //_numSwimbots1[ _currentCount ] = numSwimbots + 200;
             _numFoodBits [ _currentCount ] = numFoodBits;
             _numFoodBits1[ _currentCount ] = numFoodBits1;
+            _numCarnivores[ _currentCount ] = numCarnivores;
         
             _currentCount ++;
         }
@@ -104,6 +109,7 @@ function Graph()
             //_numSwimbots1[ _maxGraphCount ] = numSwimbots + 200;
             _numFoodBits [ _maxGraphCount ] = numFoodBits;
             _numFoodBits1[ _maxGraphCount ] = numFoodBits1;
+            _numCarnivores[ _maxGraphCount ] = numCarnivores;
         
             this.scroll();
         }
@@ -120,6 +126,7 @@ function Graph()
             //_numSwimbots1[c] = _numSwimbots	[c+1];
             _numFoodBits [c] = _numFoodBits	[c+1];
             _numFoodBits1[c] = _numFoodBits1[c+1];
+            _numCarnivores[c] = _numCarnivores[c+1];
         }
     }
     
@@ -228,7 +235,7 @@ function Graph()
         graphCanvas.lineWidth = 1.8; 
         graphCanvas.lineJoin  = "round";
 
-        let series = [ [ _numFoodBits, GRAPH_FOODBIT_COLOR ], [ _numFoodBits1, GRAPH_FOODBIT_1_COLOR ], [ _numSwimbots, GRAPH_SWIMBOT_COLOR ] ];
+        let series = [ [ _numFoodBits, GRAPH_FOODBIT_COLOR ], [ _numFoodBits1, GRAPH_FOODBIT_1_COLOR ], [ _numSwimbots, GRAPH_SWIMBOT_COLOR ], [ _numCarnivores, GRAPH_CARNIVORE_COLOR ] ];
 
         for (let s=0; s<series.length; s++)
         {

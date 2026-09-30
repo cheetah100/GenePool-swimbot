@@ -22,7 +22,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-        <link rel="stylesheet" type="text/css" href="css/genepool.css?v=20260929b">
+        <link rel="stylesheet" type="text/css" href="css/genepool.css?v=20260930d">
 	</head>
 	<body
 		onload = "
@@ -79,6 +79,7 @@
                         <button id = "viewEfficientButton"    class = "chip" onmousedown = "setViewMode( id, ViewTrackingMode.EFFICIENT  );" >most efficient</button>
                         <button id = "viewVirginButton"       class = "chip" onmousedown = "setViewMode( id, ViewTrackingMode.VIRGIN     );" >oldest virgin</button>
                         <button id = "viewGluttonButton"      class = "chip" onmousedown = "setViewMode( id, ViewTrackingMode.HUNGRY     );" >glutton</button>
+                    <button id = "viewCarnivoreButton"    class = "chip hunt" title = "Select and follow a carnivore (click again for the next one)" onmousedown = "findCarnivore();" >find carnivore</button>
                     </div>
 
                 <div id = "viewOptionsPanel" class = "toggle-row" >
@@ -118,11 +119,15 @@
                         <button id = "pool8Button" class = "basicButton" onClick = "choosePoolToLoad( SimulationStartMode.EMPTY        ); requestToLoadPoolFromPreset();" >empty</button>
                     </div>
 
+                    <div class = "section-label">Save and load</div>
+                    <div class = "button-grid">
+                        <button id = "savePoolButton" class = "basicButton" title = "Download this pool (swimbots, genes, food, settings) as a .json file" onClick = "savePoolToFile();" >save pool</button>
+                        <button id = "loadPoolButton" class = "basicButton" title = "Replace this pool with one saved earlier" onClick = "document.getElementById( 'poolFileInput' ).click();" >load pool&hellip;</button>
+                    </div>
+                    <input type = "file" id = "poolFileInput" class = "hidden" accept = ".json,application/json" onchange = "loadPoolFromFile( event );">
+                    <p id = "saveLoadStatus" class = "muted small"></p>
+
                     <div id = "saveLoadPanel" class = "note" >
-                        <p>
-                            Saving and loading pool files is under construction &mdash; it is moving
-                            over to the local file system using the HTML file API. <span class = "muted">&mdash; Jeffrey</span>
-                        </p>
                         <p>
                             After starting a pool from the <b>speciation</b> preset and running it for tens of thousands
                             of time steps, use the button below to get the data collected during the simulation. You can
@@ -304,63 +309,63 @@
 		<!-- ------------------------------------------------------------------------- -->
 		<!-- The Gene Pool simulation is loaded here...                                -->
 		<!-- ------------------------------------------------------------------------- -->
-		<script type = "text/javascript" src = "simulation/MathConstants.js?v=20260929b"    ></script>
-		<script type = "text/javascript" src = "simulation/Parameters.js?v=20260929b"       ></script>
-		<script type = "text/javascript" src = "simulation/Utility.js?v=20260929b"          ></script>
-		<script type = "text/javascript" src = "simulation/Vector2D.js?v=20260929b" 	    ></script>
-		<script type = "text/javascript" src = "simulation/Pool.js?v=20260929b"             ></script>
-		<script type = "text/javascript" src = "simulation/Camera.js?v=20260929b"           ></script>
-		<script type = "text/javascript" src = "simulation/FoodBit.js?v=20260929b"          ></script>
-		<script type = "text/javascript" src = "simulation/SwimbotTypes.js?v=20260929b"  	></script>
-		<script type = "text/javascript" src = "simulation/Genotype.js?v=20260929b"  	    ></script>
-		<script type = "text/javascript" src = "simulation/Embryology.js?v=20260929b"       ></script>
-		<script type = "text/javascript" src = "simulation/Brain.js?v=20260929b"            ></script>
-		<script type = "text/javascript" src = "simulation/Swimbot.js?v=20260929b"  	  	></script>
-		<script type = "text/javascript" src = "simulation/Touch.js?v=20260929b"		    ></script>		
-		<script type = "text/javascript" src = "simulation/ViewTracking.js?v=20260929b"     ></script>		
-		<script type = "text/javascript" src = "simulation/FamilyTree.js?v=20260929b"       ></script>		
-		<script type = "text/javascript" src = "simulation/PhyloTree.js?v=20260929b"        ></script>		
-		<script type = "text/javascript" src = "simulation/Obstacle.js?v=20260929b"         ></script>		
-		<script type = "text/javascript" src = "simulation/GenePool.js?v=20260929b"         ></script> 
+		<script type = "text/javascript" src = "simulation/MathConstants.js?v=20260930d"    ></script>
+		<script type = "text/javascript" src = "simulation/Parameters.js?v=20260930d"       ></script>
+		<script type = "text/javascript" src = "simulation/Utility.js?v=20260930d"          ></script>
+		<script type = "text/javascript" src = "simulation/Vector2D.js?v=20260930d" 	    ></script>
+		<script type = "text/javascript" src = "simulation/Pool.js?v=20260930d"             ></script>
+		<script type = "text/javascript" src = "simulation/Camera.js?v=20260930d"           ></script>
+		<script type = "text/javascript" src = "simulation/FoodBit.js?v=20260930d"          ></script>
+		<script type = "text/javascript" src = "simulation/SwimbotTypes.js?v=20260930d"  	></script>
+		<script type = "text/javascript" src = "simulation/Genotype.js?v=20260930d"  	    ></script>
+		<script type = "text/javascript" src = "simulation/Embryology.js?v=20260930d"       ></script>
+		<script type = "text/javascript" src = "simulation/Brain.js?v=20260930d"            ></script>
+		<script type = "text/javascript" src = "simulation/Swimbot.js?v=20260930d"  	  	></script>
+		<script type = "text/javascript" src = "simulation/Touch.js?v=20260930d"		    ></script>		
+		<script type = "text/javascript" src = "simulation/ViewTracking.js?v=20260930d"     ></script>		
+		<script type = "text/javascript" src = "simulation/FamilyTree.js?v=20260930d"       ></script>		
+		<script type = "text/javascript" src = "simulation/PhyloTree.js?v=20260930d"        ></script>		
+		<script type = "text/javascript" src = "simulation/Obstacle.js?v=20260930d"         ></script>		
+		<script type = "text/javascript" src = "simulation/GenePool.js?v=20260930d"         ></script> 
 
 		<!-- -------------------------------------------------------------------------- -->
 		<!-- 2D render code																-->
 		<!-- -------------------------------------------------------------------------- -->
 		<!--
-		<script type="text/javascript" src="renderCanvas/SwimbotRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderCanvas/FoodBitRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderCanvas/PoolRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderCanvas/Renderer.js?v=20260929b"></script>
+		<script type="text/javascript" src="renderCanvas/SwimbotRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderCanvas/FoodBitRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderCanvas/PoolRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderCanvas/Renderer.js?v=20260930d"></script>
 		-->
 
 		<!-- -------------------------------------------------------------------------- -->
 		<!-- WebGL render code (3D bodies, 2D canvas used for overlays)					-->
 		<!-- -------------------------------------------------------------------------- -->
-		<script type="text/javascript" src="renderWebGL/GLView.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderWebGL/SwimbotRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderWebGL/FoodBitRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderWebGL/PoolRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="renderWebGL/Renderer.js?v=20260929b"></script>
+		<script type="text/javascript" src="renderWebGL/GLView.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderWebGL/SwimbotRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderWebGL/FoodBitRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderWebGL/PoolRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="renderWebGL/Renderer.js?v=20260930d"></script>
 
 		<!-- -------------------------------------------------------------------------- -->
 		<!-- 3D render code																-->
 		<!-- -------------------------------------------------------------------------- -->
 		<!--
-		<script type="text/javascript" src="render3d/GenePool3d/ext/jquery-3.4.1.min.js?v=20260929b"></script>
-		<script type='text/javascript' src='render3d/GenePool3d/genePool3D.js?v=20260929b'></script>
-		<script type="text/javascript" src="render3d/SwimbotRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="render3d/FoodBitRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="render3d/PoolRenderer.js?v=20260929b"></script>
-		<script type="text/javascript" src="render3d/Renderer.js?v=20260929b"></script>
+		<script type="text/javascript" src="render3d/GenePool3d/ext/jquery-3.4.1.min.js?v=20260930d"></script>
+		<script type='text/javascript' src='render3d/GenePool3d/genePool3D.js?v=20260930d'></script>
+		<script type="text/javascript" src="render3d/SwimbotRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="render3d/FoodBitRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="render3d/PoolRenderer.js?v=20260930d"></script>
+		<script type="text/javascript" src="render3d/Renderer.js?v=20260930d"></script>
 		-->
 		
 		<!-- ------------------------------------------------------------------------- -->
 		<!-- all the javascript files (other than the simulation) are loaded here...   -->
 		<!-- ------------------------------------------------------------------------- -->		
-		<script type = "text/javascript" src = "js/saveLoad.js?v=20260929b" ></script>
-		<script type = "text/javascript" src = "js/graph.js?v=20260929b"    ></script>
-		<script type = "text/javascript" src = "js/info.js?v=20260929b"     ></script>
-		<script type = "text/javascript" src = "js/ui.js?v=20260929b"       ></script>
+		<script type = "text/javascript" src = "js/saveLoad.js?v=20260930d" ></script>
+		<script type = "text/javascript" src = "js/graph.js?v=20260930d"    ></script>
+		<script type = "text/javascript" src = "js/info.js?v=20260930d"     ></script>
+		<script type = "text/javascript" src = "js/ui.js?v=20260930d"       ></script>
 
 	<!-- ------------------------------------------------------------ -->
 	<!-- prepare the UI: open the info panel on its first page        -->

@@ -122,9 +122,11 @@ let testNoEel = true;
     let _cutOff                 = 0;
     let preferredFoodTypeGene   = 0;
     let digestibleFoodTypeGene  = 0;
+    let foodColorGene           = NULL_INDEX;   // first of three (red, green, blue); set when the first phenotype is generated
     
 	this.getPreferredFoodTypeGene   = function() { return preferredFoodTypeGene;    }
 	this.getDigestibleFoodTypeGene  = function() { return digestibleFoodTypeGene;   }
+	this.getFoodColorGene           = function() { return foodColorGene;            }
 
     for (let g=0; g<NUM_GENES; g++)
     {
@@ -287,6 +289,22 @@ let testNoEel = true;
         
         
         
+        //-----------------------------------------------------------------------------------------
+        // food color: anything this color looks like food (see FOOD_BIT_COLORS in Parameters.js).
+        // With two food types, the preferred type is the food bit color closest to it.
+        //-----------------------------------------------------------------------------------------
+        g++;  foodColorGene = g;  _geneNames[g] = "food red";    phenotype.foodColor.red   = _normalizedGenes[g];
+        g++;                      _geneNames[g] = "food green";  phenotype.foodColor.green = _normalizedGenes[g];
+        g++;                      _geneNames[g] = "food blue";   phenotype.foodColor.blue  = _normalizedGenes[g];
+
+        if ( globalTweakers.numFoodTypes === 2 ) 
+        {
+            let fc = phenotype.foodColor;
+            let match0 = getFoodColorMatch( fc.red, fc.green, fc.blue, FOOD_BIT_COLORS[0][0], FOOD_BIT_COLORS[0][1], FOOD_BIT_COLORS[0][2] );
+            let match1 = getFoodColorMatch( fc.red, fc.green, fc.blue, FOOD_BIT_COLORS[1][0], FOOD_BIT_COLORS[1][1], FOOD_BIT_COLORS[1][2] );
+            phenotype.preferredFoodType = ( match1 > match0 ) ? 1 : 0;
+        }
+
         //---------------------------------------
         // important: set _numGenesUsed
         //---------------------------------------

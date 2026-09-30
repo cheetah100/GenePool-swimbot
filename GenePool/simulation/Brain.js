@@ -49,6 +49,7 @@ function Brain()
 	let _energy                 = ZERO;
 	let _foundFoodBit           = false;
 	let _foundSwimbot           = false;
+	let _foundPrey              = false;
 	let _hungerThreshold        = ZERO;
 	let _attractionCriterion    = ATTRACTION_SIMILAR_COLOR;
 	
@@ -76,6 +77,7 @@ function Brain()
         if ( _energy < _hungerThreshold )
         {
             if (( _state != BRAIN_STATE_PURSUING_FOOD )
+            &&  ( _state != BRAIN_STATE_PURSUING_PREY )
             &&  ( _state != BRAIN_STATE_LOOKING_FOR_FOOD ))
             {
                 _state = BRAIN_STATE_LOOKING_FOR_FOOD;
@@ -99,6 +101,10 @@ function Brain()
             {
                 _state = BRAIN_STATE_PURSUING_FOOD;
             }
+            else if ( _foundPrey )
+            {
+                _state = BRAIN_STATE_PURSUING_PREY;
+            }
         }	      
         //--------------------------------------------------------
         //  pursuing food
@@ -107,7 +113,17 @@ function Brain()
         {
             if ( !_foundFoodBit )
             {
-                _state = BRAIN_STATE_LOOKING_FOR_FOOD;
+                _state = _foundPrey ? BRAIN_STATE_PURSUING_PREY : BRAIN_STATE_LOOKING_FOR_FOOD;
+            }
+        }
+        //--------------------------------------------------------
+        //  pursuing prey (another swimbot of my food color)
+        //--------------------------------------------------------
+        else if ( _state == BRAIN_STATE_PURSUING_PREY )
+        {
+            if ( !_foundPrey )
+            {
+                _state = _foundFoodBit ? BRAIN_STATE_PURSUING_FOOD : BRAIN_STATE_LOOKING_FOR_FOOD;
             }
         }
         //--------------------------------------------------------
@@ -145,6 +161,7 @@ function Brain()
     this.setHungerThreshold = function(h) { _hungerThreshold     = h; }		
     this.setFoundFoodBit    = function(f) { _foundFoodBit        = f; }
     this.setFoundSwimbot    = function(f) { _foundSwimbot        = f; }		
+    this.setFoundPrey       = function(f) { _foundPrey           = f; }
 
     //--------------------------------
     this.setAttraction = function(a) 

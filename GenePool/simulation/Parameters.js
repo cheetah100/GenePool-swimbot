@@ -112,6 +112,49 @@ const DEFAULT_SWIMBOT_HUNGER_THRESHOLD	=  50;
 // a swimbot that does not have the right digestion (gene values) for that type
 // of food will only get 35 energy points if the FOOD_TYPE_OFFSET is set to 0.7
 
+
+//----------------------------------------------------------------------------------------
+// Diet: every swimbot has a food color gene (red, green, blue). The closer it is to the
+// food bit color, the better the swimbot does on food bits (herbivores). The further away,
+// the better it does on meat: it hunts any swimbot not colored like itself (carnivores).
+// Swimbots start with the food bit color; in-between are omnivores.
+//----------------------------------------------------------------------------------------
+const FOOD_BIT_COLORS           = [ [ 0.3, 0.8, 0.2 ], [ 0.3, 0.5, 0.9 ] ];   // type 0 (green), type 1 (blue)
+const FOOD_COLOR_TOLERANCE      = 0.35;     // color distance (0 to 1) at which a color stops looking like food at all
+const MIN_FOOD_COLOR_MATCH      = 0.05;     // weaker matches than this are ignored
+const HERBIVORE_FOOD_MATCH      = 0.8;      // a food bit match at least this good counts as a herbivore (for display)
+const CARNIVORE_FOOD_MATCH      = 0.2;      // a best food bit match below this counts as a carnivore (for display)
+const PREY_BITE_ENERGY          = 30.0;     // energy taken from the prey in one bite
+const PREY_MEAT_EFFICIENCY      = 0.7;      // fraction of a bite's energy the hunter gets (scaled by meat adaptation)
+const PREY_BITE_COOLDOWN        = 25;       // time steps between bites
+const PREY_BITE_REACH           = 4.0;      // how far beyond a prey part's surface the mouth can bite
+const PREY_KIN_COLOR_SIMILARITY = 0.9;      // hunters won't hunt swimbots at least this similar in color to themselves (their own kind)
+
+// hunters prefer easy prey: young (still growing), weak (low energy), and not swimming away
+const PREY_BASE_VULNERABILITY   = 0.5;      // how tempting a healthy adult is, relative to the easiest prey
+const PREY_HEALTHY_ENERGY       = 100.0;    // prey with at least this much energy are not weak at all
+const PREY_AWAY_PENALTY         = 0.7;      // how much less tempting prey are when outswimming the hunter
+const PREY_MIN_HUNTER_SPEED     = 0.2;      // (avoids dividing by a nearly stopped hunter's speed)
+
+// hunters give up chases they are not winning
+const PREY_CHASE_PROGRESS       = 1.0;      // the gap must shrink by this much to count as progress
+const PREY_GIVE_UP_STEPS        = 200;      // steps without progress before giving up
+const PREY_IGNORE_STEPS         = 600;      // afterwards, that prey is ignored for this long
+
+
+//--------------------------------------------------------------------------------
+// how much a color looks like food (1 = exact match, 0 = not food at all)
+//--------------------------------------------------------------------------------
+function getFoodColorMatch( foodRed, foodGreen, foodBlue, red, green, blue )
+{
+    let dr = foodRed   - red;
+    let dg = foodGreen - green;
+    let db = foodBlue  - blue;
+    let distance = Math.sqrt( ( dr * dr + dg * dg + db * db ) / 3.0 );     // 0 to 1
+
+    return Math.max( 0.0, 1.0 - distance / FOOD_COLOR_TOLERANCE );
+}
+
 //const YOUNG_AGE_DURATION    = 1000;
 const YOUNG_AGE_DURATION    = 10000;	//BPD
 

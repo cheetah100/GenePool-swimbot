@@ -263,6 +263,22 @@ button
     align-content:          center;
 }
 
+/* carnivore finder: full width, in the graph's carnivore color */
+#viewCarnivoreButton { grid-column: 1 / -1; }
+.chip.hunt
+{
+    color:          #ffb8d0;
+    border-color:   rgba( 255, 79, 139, 0.35 );
+}
+.chip.hunt:hover  { background: rgba( 255, 79, 139, 0.12 ); color: #ffd3e2; }
+.chip.hunt.active
+{
+    background:     rgba( 255, 79, 139, 0.18 );
+    border-color:   #ff4f8b;
+    color:          var(--text);
+    box-shadow:     0 0 0 1px rgba( 255, 79, 139, 0.25 ) inset, 0 0 12px rgba( 255, 79, 139, 0.2 );
+}
+
 .toggle-row
 {
     display:                grid;

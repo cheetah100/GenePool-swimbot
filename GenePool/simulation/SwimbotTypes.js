@@ -37,6 +37,11 @@ const MAX_PARTS 	  = 16;
 //------------------------------------------
 // attraction
 //------------------------------------------
+//	diet, from how well a swimbot's food color matches the food bits (see Parameters.js)
+const DIET_HERBIVORE                =  0;
+const DIET_OMNIVORE                 =  1;
+const DIET_CARNIVORE                =  2;
+
 const ATTRACTION_NULL               = -1;
 const ATTRACTION_COLORFUL           =  0;
 const ATTRACTION_BIG                =  1;
@@ -190,6 +195,7 @@ function Phenotype()
 	this.mass               = ZERO;
 	this.preferredFoodType  = 0;
 	this.digestibleFoodType = 0;
+	this.foodColor          = new Color( FOOD_BIT_COLORS[0][0], FOOD_BIT_COLORS[0][1], FOOD_BIT_COLORS[0][2], ONE );	// what looks like food
 	
 	for (let p=0; p<MAX_PARTS; p++)
 	{

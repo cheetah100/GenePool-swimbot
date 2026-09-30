@@ -44,6 +44,7 @@ const MENU_PANELS =
 const LEGEND_SWIMBOT_COLOR  = "#ff8a5b";
 const LEGEND_FOODBIT_COLOR  = "#5ee07a";
 const LEGEND_FOODBIT1_COLOR = "#5aa9ff";
+const LEGEND_CARNIVORE_COLOR = "#ff4f8b";
 
 const UI_UPDATE_PERIOD = 500;
 
@@ -531,6 +532,7 @@ function clearViewModeButtons()
     {
         setActive( buttonID, false );
     }
+    setActive( 'viewCarnivoreButton', false );
 }
 
 //----------------------------------------------------------
@@ -545,6 +547,33 @@ function syncViewModeButtons()
     {
         setActive( buttonID, mode === ViewTrackingMode[ modeName ] );
     }
+
+    //	following a carnivore
+    let selected = genePool.getSelectedSwimbotID();
+    setActive( 'viewCarnivoreButton', ( mode === ViewTrackingMode.SELECTED ) && ( selected !== NULL_INDEX ) 
+                                      && ( genePool.getSwimbotDiet( selected ) === DIET_CARNIVORE ) );
+}
+
+
+//---------------------------------------------------------
+// select and follow a carnivore; each click finds the next
+//---------------------------------------------------------
+function findCarnivore()
+{
+    closePopupPanel();
+
+    if ( genePool.selectNextCarnivore() )
+    {
+        openPanel( 'menuSwimbotButton' );
+    }
+    else
+    {
+        let button = document.getElementById( 'viewCarnivoreButton' );
+        button.textContent = "no carnivores right now";
+        setTimeout( function() { button.textContent = "find carnivore"; }, 1500 );
+    }
+
+    syncViewModeButtons();
 }
 
 
@@ -798,7 +827,7 @@ function updateUI()
         //-----------------------------------------------------------------------------------
         // always update the graph data, but only draw it when it is showing
         //-----------------------------------------------------------------------------------
-        _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() , genePool.getNumFoodBits1() );
+        _graph.update( genePool.getTimeStep(), genePool.getNumSwimbots(), genePool.getNumFoodBits() , genePool.getNumFoodBits1(), genePool.getNumCarnivores() );
     
         if ( isShown( 'graphPanel' ) )
         {
@@ -834,6 +863,7 @@ function updateSwimbotPanel()
     else if ( brainState ===  BRAIN_STATE_PURSUING_MATE      ) { goalDescription = "pursuing mate " + mateString;   }
     else if ( brainState ===  BRAIN_STATE_LOOKING_FOR_FOOD   ) { goalDescription = "looking for food";              }
     else if ( brainState ===  BRAIN_STATE_PURSUING_FOOD      ) { goalDescription = "pursuing food";                 }
+    else if ( brainState ===  BRAIN_STATE_PURSUING_PREY      ) { goalDescription = "hunting";                       }
 
     let foodText = function( type )
     {
@@ -841,6 +871,12 @@ function updateSwimbotPanel()
         let name  = ( type === 1 ) ? "blue" : "green";
         return "<span class = 'food-dot' style = 'background:" + color + "'></span>" + name;
     }
+
+    let dietNames = [ "herbivore", "omnivore", "carnivore" ];
+    let fc = genePool.getSwimbotFoodColor( selectedSwimbot );
+    let foodColorCss = "rgb(" + Math.round( fc.red * 255 ) + "," + Math.round( fc.green * 255 ) + "," + Math.round( fc.blue * 255 ) + ")";
+    let dietText = "<span class = 'food-dot' style = 'background:" + foodColorCss + "' title = 'food color'></span>" 
+                 + dietNames[ genePool.getSwimbotDiet( selectedSwimbot ) ];
 
     let stat = function( label, value, full )
     {
@@ -859,8 +895,13 @@ function updateSwimbotPanel()
     +   stat( "energy",            Math.floor( genePool.getSwimbotEnergy( selectedSwimbot ) ) )
     +   stat( "food bits eaten",   Math.floor( genePool.getSwimbotNumFoodBitsEaten( selectedSwimbot ) ) )
     +   stat( "offspring",         Math.floor( genePool.getSwimbotNumOffspring( selectedSwimbot ) ) )
-    +   stat( "prefers food",      foodText( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) ) )
-    +   stat( "digests best",      foodText( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) ) )
+    +   stat( "diet",              dietText )
+    +   stat( "bites taken",       genePool.getSwimbotNumBites( selectedSwimbot ) )
+    //	food types only matter in pools with two kinds of food bits (e.g. speciation)
+    +   ( ( globalTweakers.numFoodTypes === 2 )
+        ?   stat( "prefers food",      foodText( genePool.getSwimbotPreferredFoodType ( selectedSwimbot ) ) )
+          + stat( "digests best",      foodText( genePool.getSwimbotDigestibleFoodType( selectedSwimbot ) ) )
+        :   "" )
     +   stat( "sexual attraction", genePool.getSwimbotAttractionDescription( selectedSwimbot ), true )
     + "</div>";
 }
@@ -885,6 +926,7 @@ function updateGraphPanel()
     + item( LEGEND_SWIMBOT_COLOR,     "swimbots",         genePool.getNumSwimbots()  )
     + item( LEGEND_FOODBIT_COLOR,     "green food bits",  genePool.getNumFoodBits()  )
     + item( LEGEND_FOODBIT1_COLOR,    "blue food bits",   genePool.getNumFoodBits1() )
+    + item( LEGEND_CARNIVORE_COLOR,   "carnivores",       genePool.getNumCarnivores() )
     + "</div>";
 
     _graph.render();
