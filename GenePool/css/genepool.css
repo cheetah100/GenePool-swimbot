@@ -11,1362 +11,780 @@
 /*                                                                          */
 /* ------------------------------------------------------------------------ */
 
-body 
+/* -------------------------------------------- */
+/* theme                                        */
+/* -------------------------------------------- */
+:root
 {
-    background-color: #889088;
-    /*background-color: #dddddb;*/
+    --bg:               #070d18;
+    --panel:            #0c1524;
+    --card:             rgba( 255, 255, 255, 0.035 );
+    --card-border:      rgba( 255, 255, 255, 0.07 );
+    --control:          rgba( 255, 255, 255, 0.06 );
+    --control-hover:    rgba( 255, 255, 255, 0.11 );
+    --control-border:   rgba( 255, 255, 255, 0.09 );
+    --text:             #e3ebf5;
+    --text-soft:        #b4c3d6;
+    --muted:            #7a8ca3;
+    --accent:           #3cc7f0;
+    --accent-soft:      rgba( 60, 199, 240, 0.16 );
+    --accent-strong:    rgba( 60, 199, 240, 0.32 );
+    --danger:           #ff6b6b;
+    --danger-soft:      rgba( 255, 107, 107, 0.14 );
+    --radius:           12px;
+    --radius-small:     8px;
+    --sidebar-width:    clamp( 350px, 27vw, 420px );
+    --font:             "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body
+{
+    margin:     0;
+    height:     100%;
+    overflow:   hidden;
+}
+
+body
+{
+    background:     var(--bg);
+    color:          var(--text);
+    font-family:    var(--font);
+    font-size:      13px;
+    line-height:    1.45;
+    -webkit-font-smoothing: antialiased;
+}
+
+a       { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+p       { margin: 0 0 10px 0; }
+
+.hidden { display: none !important; }
+.muted  { color: var(--muted); }
+.small  { font-size: 11.5px; }
 
 /* -------------------------------------------- */
-/* classes                                      */
+/* layout: pool stage + sidebar                 */
 /* -------------------------------------------- */
-.basicPanel
-{ 
-    position:               absolute; 
-    background-color:       #caccc2;
-    border-color:           #666659;       
-    border-style:           solid;
-    border-radius:          4px;
-    border-width:           1px; 
-    border-bottom-width:    4px;
-    color:                  #505050; 
-    font-family:            "Arial";
-    font-size:              12px;
-}
-
-.menuPanel
-{ 
-    position: absolute; 
-    left:   10px;
-    top:    10px;
-    width:  340px;
-    height: 430px;
-    border-width: 0px;
-    visibility: hidden; 
-
-    /* for debugging */
-    /*background-color: #9999ff;*/
-}
-
-
-.basicButton
+#app
 {
-    position:               absolute; 
-    width:                  71px; 
-    height:                 30px;
-    background-color:       #dcdcd0;
-    /*border-color:           #666659;*/   
-    border-color:           #7f7f77;       
-    border-style:           solid;
-    border-radius:          4px;
-    border-width:           1px; 
-    border-bottom-width:    4px;
-    z-index:                1;
-    color:                  #556050; 
-    font-size:              12px;
-    font-family:            "Arial black";
+    display:    flex;
+    height:     100vh;
+    width:      100vw;
 }
 
-.basicButton:hover 
+#stage
 {
-	background-color:    #eeeedd;
-    //border-bottom-width: 3px;
-}
-.basicButton:active 
-{
-	background-color:    #ffffee;
-    //border-bottom-width: 1px;
+    position:   relative;
+    flex:       1 1 auto;
+    min-width:  0;
+    overflow:   hidden;
+    background: #000;
 }
 
-.basicTitle
-{
-    color: #556050; 
-    font-family: "Arial";
-    font-size: 16;
-    width: 200;
-}
-
-.navigationButton
-{
-    position: absolute; 
-    width:  30; 
-    height: 30;      
-    border-radius: 0px;
-    border-width: 0;
-    background-size: 30px 30px;
-    background-color: transparent;
-    
-    /* for debugging */
-    /*background-color: #dd5555;*/
-}
-
-
-.EcoSliderLabelDisplay
-{
-    position: absolute; 
-    left: 0; 
-    width: 120;
-    
-    /* for debugging */
-    /*background-color: #9999ff;*/
-}
-
-.EcoSlider
-{
-    position: absolute; 
-    left: 120; 
-    height: 20;
-    width: 100;
-    z-index: 2;
-
-    /* for debugging */
-    /*background-color: #ffff99;*/
-}
-
-.EcoSliderValueDisplay
-{
-    position: absolute; 
-    left: 270; 
-    width: 60;
-    height: 20;
-
-    /* for debugging */
-    /*background-color: #ccbbcc;*/
-}
-
-.geneTweakerValue
-{
-    position: absolute; 
-    left: 20;     
-}
-
-.geneTweakerSlider
-{
-    position: absolute; 
-    left: 50;     
-
-    width: 100;
-    height: 30;
-
-    /* for debugging */
-    background-color: #ff0000;
-
-}
-
-.geneTweakerName
-{
-    position: absolute; 
-    left: 220;     
-    width: 150;     
-}
-
-
-
-/* -------------------------------------------- */
-/* id's                                         */
-/* -------------------------------------------- */
 #Canvas
 {
-    position: absolute; 
+    position:   absolute;
+    left:       0;
+    top:        0;
+    display:    block;
 }
 
 #masterPanel
 {
-    position:           absolute; 
-    right:              10px;
-    width:              370px; 
-    height:             700px;
+    flex:           0 0 var(--sidebar-width);
+    width:          var(--sidebar-width);
+    display:        flex;
+    flex-direction: column;
+    gap:            12px;
+    padding:        16px 16px 12px 16px;
+    overflow-y:     auto;
+    overflow-x:     hidden;
+    background:     linear-gradient( 180deg, #0e1a2c 0%, var(--panel) 40%, #09111e 100% );
+    border-left:    1px solid var(--card-border);
+    box-shadow:     -12px 0 32px rgba( 0, 0, 0, 0.35 );
+    scrollbar-width: thin;
+    scrollbar-color: rgba( 255, 255, 255, 0.15 ) transparent;
+}
 
-    /* for debugging */
-    /*background-color:   #ddffff;*/
+/* -------------------------------------------- */
+/* brand                                        */
+/* -------------------------------------------- */
+.brand
+{
+    display:        flex;
+    align-items:    center;
+    justify-content: space-between;
+    padding:        2px 2px 0 2px;
 }
 
 #mainTitle
 {
-    position: absolute; 
-    width: 370; 
-    height: 30;
-    color: #112211; 
-    font-family: "Arial black";
-
-    /* for debugging */
-    /*background-color: #ffffff;*/
+    display:        flex;
+    align-items:    center;
+    gap:            10px;
+    font-size:      20px;
+    font-weight:    700;
+    letter-spacing: -0.02em;
 }
 
-#swimbots_url
+.brand-mark
 {
-    position: absolute; 
-    left:   100px; 
-    top:    5px;
-    width:  100px; 
-    height: 20px;    
-    font-size:  12px;   
-    font-family: "Arial black";
-
-    /* for debugging */
-    /*background-color: #ffffff;*/
+    width:          22px;
+    height:         22px;
+    border-radius:  50%;
+    background:     radial-gradient( circle at 35% 30%, #b8f3ff 0%, #3cc7f0 35%, #1767a8 75%, #0b2a4a 100% );
+    box-shadow:     0 0 14px rgba( 60, 199, 240, 0.55 );
 }
 
+#swimbots_url a
+{
+    color:          var(--muted);
+    font-size:      12px;
+    font-weight:    500;
+}
+#swimbots_url a:hover { color: var(--accent); text-decoration: none; }
 
+/* -------------------------------------------- */
+/* cards and labels                             */
+/* -------------------------------------------- */
+.card
+{
+    background:     var(--card);
+    border:         1px solid var(--card-border);
+    border-radius:  var(--radius);
+    padding:        14px;
+}
+
+.card-heading, .section-label
+{
+    color:          var(--muted);
+    font-size:      11px;
+    font-weight:    600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom:  10px;
+}
+.section-label { margin-top: 16px; }
+.menuPanel > .section-label:first-child { margin-top: 0; }
+
+/* -------------------------------------------- */
+/* buttons                                      */
+/* -------------------------------------------- */
+button
+{
+    font-family:    inherit;
+    cursor:         pointer;
+}
+
+.basicButton, .chip
+{
+    height:         32px;
+    padding:        0 12px;
+    color:          var(--text-soft);
+    background:     var(--control);
+    border:         1px solid var(--control-border);
+    border-radius:  var(--radius-small);
+    font-size:      12.5px;
+    font-weight:    500;
+    white-space:    nowrap;
+    transition:     background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.basicButton:hover, .chip:hover
+{
+    background:     var(--control-hover);
+    color:          var(--text);
+}
+.basicButton:active, .chip:active { transform: translateY( 1px ); }
+.basicButton:focus-visible, .chip:focus-visible, .tab:focus-visible
+{
+    outline:        2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.basicButton.wide    { width: 100%; margin-top: 12px; }
+.basicButton.primary
+{
+    background:     var(--accent-soft);
+    border-color:   var(--accent-strong);
+    color:          var(--text);
+}
+.basicButton.primary:hover { background: var(--accent-strong); }
+.basicButton.danger:hover
+{
+    background:     var(--danger-soft);
+    border-color:   rgba( 255, 107, 107, 0.4 );
+    color:          var(--danger);
+}
+.basicButton.featured
+{
+    border-color:   var(--accent-strong);
+    color:          var(--text);
+}
+
+.button-grid
+{
+    display:                grid;
+    grid-template-columns:  repeat( 2, 1fr );
+    gap:                    8px;
+}
+.button-grid.four { grid-template-columns: repeat( 4, 1fr ); }
+.button-grid.four .basicButton { padding: 0 4px; font-size: 12px; }
+.button-grid + p { margin-top: 10px; }
+
+/* chips: toggles and view modes (the 'active' class marks the current state) */
+.chip
+{
+    min-width:      0;
+    overflow:       hidden;
+    text-overflow:  ellipsis;
+    height:         30px;
+    padding:        0 8px;
+    font-size:      12px;
+    border-radius:  999px;
+}
+.chip.active
+{
+    background:     var(--accent-soft);
+    border-color:   var(--accent);
+    color:          var(--text);
+    box-shadow:     0 0 0 1px rgba( 60, 199, 240, 0.25 ) inset, 0 0 12px rgba( 60, 199, 240, 0.18 );
+}
 
 /* -------------------------------------------- */
 /* view panel                                   */
 /* -------------------------------------------- */
-
-#viewPanel
+.chip-grid
 {
-    position: absolute; 
-    left: 0; 
-    top: 30; 
-    width: 365;
-    height: 155;
-    background-color: #9daeae;
-    border-color:     #646870;       
-
-    /* for debugging */
-    /*background-color: #ffaaaa;*/
+    display:                grid;
+    grid-template-columns:  repeat( 2, minmax( 0, 1fr ) );
+    gap:                    6px;
+    align-content:          center;
 }
 
-#viewNavPanel
+/* carnivore finder: full width, in the graph's carnivore color */
+#viewCarnivoreButton { grid-column: 1 / -1; }
+.chip.hunt
 {
-    border-color:     #666677;       
-    border-width:     2;           
-    position: absolute; 
-    left:   10;
-    width:  130;
-    height: 120;
-
-    /* for debugging */
-    /*background-color: #99aaaa;*/
+    color:          #ffb8d0;
+    border-color:   rgba( 255, 79, 139, 0.35 );
 }
-
-#leftNav
+.chip.hunt:hover  { background: rgba( 255, 79, 139, 0.12 ); color: #ffd3e2; }
+.chip.hunt.active
 {
-    left:   25; 
-    top:    30;
-    background-image: url( "../images/left.png" );
+    background:     rgba( 255, 79, 139, 0.18 );
+    border-color:   #ff4f8b;
+    color:          var(--text);
+    box-shadow:     0 0 0 1px rgba( 255, 79, 139, 0.25 ) inset, 0 0 12px rgba( 255, 79, 139, 0.2 );
 }
-#leftNav:hover  { background-image: url( "../images/left-hovered.png" ); }
-#leftNav:active { background-image: url( "../images/left-pressed.png" ); }
 
-#rightNav
+.toggle-row
 {
-    left:   75; 
-    top:    30;
-    background-image: url( "../images/right.png" );
+    display:                grid;
+    grid-template-columns:  repeat( 2, minmax( 0, 1fr ) );
+    gap:                    6px;
+    margin-top:             12px;
+    padding-top:            12px;
+    border-top:             1px solid var(--card-border);
 }
-#rightNav:hover  { background-image: url( "../images/right-hovered.png" ); }
-#rightNav:active { background-image: url( "../images/right-pressed.png" ); }
-
-#upNav
-{
-    left:   50; 
-    top:    5;
-    background-image: url( "../images/up.png" );
-}
-#upNav:hover  { background-image: url( "../images/up-hovered.png" ); }
-#upNav:active { background-image: url( "../images/up-pressed.png" ); }
-
-#downNav
-{
-    left:   50; 
-    top:    55; 
-    background-image: url( "../images/down.png" );
-}
-#downNav:hover  { background-image: url( "../images/down-hovered.png" ); }
-#downNav:active { background-image: url( "../images/down-pressed.png" ); }
-
-#inNav
-{
-    left:   25; 
-    top:    80; 
-    background-image: url( "../images/in.png" );
-}
-#inNav:hover  { background-image: url( "../images/in-hovered.png" ); }
-#inNav:active { background-image: url( "../images/in-pressed.png" ); }
-
-#outNav
-{
-    left:   75; 
-    top:    80;
-    background-image: url( "../images/out.png" );
-}
-#outNav:hover  { background-image: url( "../images/out-hovered.png" ); }
-#outNav:active { background-image: url( "../images/out-pressed.png" ); }
-
-#viewTrackingPanel
-{
-    position: absolute; 
-    left: 145; 
-    width: 215;
-    height: 120;
-
-    /* for debugging */
-    /*background-color: #99aaaa;*/
-}
-
-#viewWholePoolButton
-{
-    left:       10px; 
-    top:        8px;
-    width:      95px;
-    height:     23px;
-    font-size:  10px;   
-}
-
-#viewAutoTrackButton
-{
-    left:       107px; 
-    top:        8px;
-    width:      95px;
-    height:     23px;
-    font-size:  10px;   
-}
-#viewSelectedButton
-{
-    left:       10px; 
-    top:        33px;
-    width:      95px;
-    height:     23px;
-    font-size:  10px;   
-}
-#viewMutualButton
-{
-    left:       107px; 
-    top:        33px;
-    width:      95px;
-    height:     23px;
-    font-size:  10px;   
-}
-#viewProlificButton
-{
-    left:       10px; 
-    top:        58px;
-    width:      95px;
-    height:     25px;
-    font-size:  10px;   
-}
-#viewEfficientButton
-{
-    left:       107px; 
-    top:        58px;
-    width:      95px;
-    height:     25px;
-    font-size:  10px;   
-}
-#viewVirginButton
-{
-    left:       10px; 
-    top:        85px;
-    width:      95px;
-    height:     25px;
-    font-size:  10px;   
-}
-#viewGluttonButton
-{
-    left:       107px; 
-    top:        85px;
-    width:      95px;
-    height:     25px;
-    font-size:  10px;   
-}
-
-
-
-#viewOptionsPanel
-{
-    position:   absolute; 
-    left:       0px; 
-    top:        120px;
-    width:      360px;
-    height:     30px;
-
-    /* for debugging */
-    /*background-color: #99aaaa;*/
-}
-
-
-#viewGoalButton
-{
-    left:       10px; 
-    top:        2px;
-    width:      100px;
-    height:     25px;
-    font-size:  10px;   
-}
-
-#noRenderButton
-{ 
-    left:   113;
-    top:    2;
-    width:  110; 
-    height: 25px;
-    font-size:  10px;   
-}
-
-#fastButton
-{ 
-    left:   226;
-    top:    2;
-    width:  60; 
-    height: 25px;
-    font-size:  10px;   
-}
-
-#freezeButton
-{ 
-    left:   289;
-    top:    2;
-    width:  60; 
-    height: 25px;
-    font-size:  10px;   
-}
-
-
-
-
 
 
 /* -------------------------------------------- */
-/* menu buttonpanel                             */
+/* tabs                                         */
 /* -------------------------------------------- */
-#menuButtonPanel
+.tabs
 {
-    position: absolute; 
-    left: 0; 
-    top: 200;
-    height: 30px;
-    width: 365px;
-
-    /* for debugging */
-    /*background-color: #ccccff;*/
+    display:        grid;
+    grid-template-columns: repeat( 5, 1fr );
+    gap:            2px;
+    padding:        3px;
+    background:     rgba( 0, 0, 0, 0.3 );
+    border:         1px solid var(--card-border);
+    border-radius:  var(--radius);
 }
 
-#menuPoolButton
+.tab
 {
-    left: 0;
+    height:         30px;
+    color:          var(--muted);
+    background:     transparent;
+    border:         0;
+    border-radius:  9px;
+    font-size:      12.5px;
+    font-weight:    600;
+    text-transform: capitalize;
+    transition:     background 0.15s, color 0.15s;
 }
-#menuSwimbotButton
+.tab:hover  { color: var(--text); }
+.tab.active
 {
-    left: 74;
+    color:          var(--text);
+    background:     rgba( 255, 255, 255, 0.1 );
+    box-shadow:     0 1px 2px rgba( 0, 0, 0, 0.4 );
 }
-#menuTweakButton
-{
-    left: 148;
-}
-#menuGraphButton
-{
-    left: 222;
-}
-#menuInfoButton
-{
-    left: 296;
-}
-
-
 
 /* -------------------------------------------- */
-/* main panel                                   */
+/* main (tab) panel                             */
 /* -------------------------------------------- */
 #mainPanel
 {
-    left:   0px; 
-    top:    229px; 
-    width:  365px; 
-    height: 450px;
+    flex:       1 0 auto;
+    min-height: 320px;
 }
 
+.note
+{
+    margin-top:     14px;
+    padding:        12px;
+    background:     rgba( 0, 0, 0, 0.22 );
+    border-radius:  var(--radius-small);
+    color:          var(--text-soft);
+    font-size:      12px;
+}
+.note p:last-child { margin-bottom: 0; }
+
+.empty-state
+{
+    padding:        16px 12px;
+    margin-bottom:  4px;
+    text-align:     center;
+    color:          var(--text-soft);
+    background:     rgba( 0, 0, 0, 0.22 );
+    border:         1px dashed rgba( 255, 255, 255, 0.12 );
+    border-radius:  var(--radius-small);
+}
+.empty-state p      { margin: 0; }
+.empty-title        { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; }
 
 /* -------------------------------------------- */
-/*  pool panel                                  */
+/* selected swimbot data                        */
 /* -------------------------------------------- */
-#poolPanel
+#swimbotDataPanel
 {
-/* inherits from menuPanel*/
+    margin-bottom:  12px;
 }
-
-#poolSettingsTitle
+.swimbot-header
 {
-    position: absolute; 
-    left: 0;
-    top: 0;
+    display:        flex;
+    align-items:    baseline;
+    justify-content: space-between;
+    margin-bottom:  10px;
 }
-
-#startPoolTitle
+.swimbot-name   { font-size: 16px; font-weight: 700; }
+.swimbot-goal
 {
-    position: absolute; 
-    left: 0;
-    top: 0;
-    width: 300;
-
-    /* for debugging */
-    /*background-color: #ccccff;*/
+    padding:        2px 10px;
+    border-radius:  999px;
+    background:     var(--accent-soft);
+    color:          var(--accent);
+    font-size:      11.5px;
+    font-weight:    600;
 }
-
-#pool1Button
+.stat-grid
 {
-    position: absolute; 
-    left: 0;
-    top:  20;
-    width: 150;
+    display:                grid;
+    grid-template-columns:  repeat( 2, 1fr );
+    gap:                    6px;
 }
-
-#pool2Button
+.stat
 {
-    position: absolute; 
-    left: 160;
-    top:  20;
-    width: 150;
+    padding:        8px 10px;
+    background:     rgba( 0, 0, 0, 0.22 );
+    border-radius:  var(--radius-small);
 }
-
-#pool3Button
+.stat.full      { grid-column: 1 / -1; }
+.stat-label     { color: var(--muted); font-size: 11px; }
+.stat-value     { color: var(--text); font-size: 14px; font-weight: 600; }
+.food-dot
 {
-    position: absolute; 
-    left: 0;
-    top:  55;
-    width: 150;
+    display:        inline-block;
+    width:          9px;
+    height:         9px;
+    margin-right:   5px;
+    border-radius:  50%;
+    vertical-align: 0;
 }
-#pool4Button
-{
-    position: absolute; 
-    left: 160;
-    top:  55;
-    width: 150;
-}
-#pool5Button
-{
-    position: absolute; 
-    left: 0;
-    top:  90;
-    width: 150;
-}
-
-#pool6Button
-{
-    position: absolute; 
-    left: 160;
-    top:  90;
-    width: 150;
-}
-
-#pool7Button
-{
-    position: absolute; 
-    left: 0;
-    top:  125;
-    width: 150;
-}
-
-#pool8Button
-{
-    position: absolute; 
-    left: 160;
-    top:  125;
-    width: 150;
-}
-
-
-
-#saveLoadPanel
-{
-    position: absolute; 
-    left: 0;
-    top:  170;
-    border-radius: 4px;
-    width: 280;
-    height: 110;
-    
-    /* for debugging */
-    /*background-color: #ffffdd;*/
-}
-
-#saveLoadTitle
-{
-    position: absolute; 
-    left: 0;
-    top:  10;
-    width: 300;
-}
-
-#tweakTitle
-{
-    position: absolute; 
-    left: 0;
-    top:  0;
-}
-
-
-#fileInput
-{
-    visibility: hidden;   
-    position: absolute; 
-    right: 100; 
-    top:   100;
-    width: 200; 
-    height: 100;    
-        
-    /* for debugging */
-    /*background-color: #ffff00; */
-}
-
-
-#saveButton
-{
-    position: absolute; 
-    left: 0;
-    top:  30;
-    width: 100; 
-}
-#loadButton
-{
-    position: absolute; 
-    left: 125;
-    top: 30;
-    width: 100; 
-}
-
-#familyTreeButton
-{
-    position: absolute; 
-    left: 0;
-    bottom: 10;
-    width: 200; 
-}
-
 
 /* -------------------------------------------- */
-/*  graph panel                                 */
+/* sliders                                      */
 /* -------------------------------------------- */
-#graphPanel
+.slider-list
 {
-/* inherits from menuPanel*/
+    display:        flex;
+    flex-direction: column;
+    gap:            10px;
 }
-
-
-#graphTitle
+.slider-row
 {
-    position: absolute; 
-    left: 0;
-    top:  0;
+    display:                grid;
+    grid-template-columns:  1fr auto;
+    grid-template-areas:
+        "label value"
+        "input input";
+    row-gap:                4px;
+    cursor:                 pointer;
 }
+.EcoSliderLabelDisplay  { grid-area: label; color: var(--text-soft); }
+.EcoSliderValueDisplay  { grid-area: value; color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+.EcoSlider              { grid-area: input; }
 
-#graphData
+input[type = "range"]
 {
-    position: absolute; 
-    left: 10;
-    top:  340;
-    width: 200;
-    color: #000000; 
-    font-family: "Arial";
-    font-size: 14;
-
-    /* for debugging */
-    /*background-color: #55ff44; */
+    -webkit-appearance: none;
+    appearance:     none;
+    width:          100%;
+    height:         18px;
+    margin:         0;
+    background:     transparent;
+    cursor:         pointer;
 }
-
+input[type = "range"]::-webkit-slider-runnable-track
+{
+    height:         4px;
+    border-radius:  2px;
+    background:     rgba( 255, 255, 255, 0.12 );
+}
+input[type = "range"]::-moz-range-track
+{
+    height:         4px;
+    border-radius:  2px;
+    background:     rgba( 255, 255, 255, 0.12 );
+}
+input[type = "range"]::-moz-range-progress
+{
+    height:         4px;
+    border-radius:  2px;
+    background:     var(--accent);
+}
+input[type = "range"]::-webkit-slider-thumb
+{
+    -webkit-appearance: none;
+    width:          14px;
+    height:         14px;
+    margin-top:     -5px;
+    border-radius:  50%;
+    background:     #fff;
+    border:         3px solid var(--accent);
+    box-shadow:     0 0 8px rgba( 60, 199, 240, 0.5 );
+}
+input[type = "range"]::-moz-range-thumb
+{
+    width:          10px;
+    height:         10px;
+    border-radius:  50%;
+    background:     #fff;
+    border:         3px solid var(--accent);
+    box-shadow:     0 0 8px rgba( 60, 199, 240, 0.5 );
+}
 
 /* -------------------------------------------- */
-/*  graph canvas                                */
+/* radio chips (mate preference, limb category) */
+/* -------------------------------------------- */
+.radio-grid
+{
+    display:                grid;
+    grid-template-columns:  repeat( 3, 1fr );
+    grid-template-rows:     repeat( 5, auto );
+    grid-auto-flow:         column;
+    gap:                    6px;
+}
+.radio-grid.two
+{
+    grid-template-columns:  repeat( 2, 1fr );
+    grid-template-rows:     auto;
+    grid-auto-flow:         row;
+    margin-top:             6px;
+}
+
+.radio-chip
+{
+    position:       relative;
+    display:        block;
+    cursor:         pointer;
+}
+.radio-chip input
+{
+    position:       absolute;
+    opacity:        0;
+    pointer-events: none;
+}
+.radio-chip span
+{
+    display:        flex;
+    align-items:    center;
+    justify-content: center;
+    height:         28px;
+    padding:        0 6px;
+    border-radius:  999px;
+    background:     var(--control);
+    border:         1px solid var(--control-border);
+    color:          var(--text-soft);
+    font-size:      11.5px;
+    text-align:     center;
+    white-space:    nowrap;
+    transition:     background 0.15s, border-color 0.15s, color 0.15s;
+}
+.radio-chip:hover span          { background: var(--control-hover); color: var(--text); }
+.radio-chip input:checked + span
+{
+    background:     var(--accent-soft);
+    border-color:   var(--accent);
+    color:          var(--text);
+}
+.radio-chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* -------------------------------------------- */
+/* graph                                        */
 /* -------------------------------------------- */
 #graphCanvas
 {
-    position: absolute; 
-    left: -5;
-    width: 375; 
-    height: 480;
+    display:        block;
+    width:          100%;
+    height:         230px;
+    background:     rgba( 0, 0, 0, 0.25 );
+    border-radius:  var(--radius-small);
 }
-
-
-
-/* -------------------------------------------- */
-/*  swimbot panel                               */
-/* -------------------------------------------- */
-#swimbotPanel
-{   
-/* inherits from menuPanel*/
+#graphData
+{
+    margin-top:     12px;
 }
-
-#noSelectedSwimbotPanel
+.legend
 {
-    position: absolute; 
-    left: 10;
-    top: 10;
-    width: 300;
-    height: 400px;
-    font-family: "Arial";
-    font-size: 14;
-
-    /* for debugging */
-    /*background-color: #ccccff;*/
+    display:                grid;
+    grid-template-columns:  repeat( 2, 1fr );
+    gap:                    6px;
 }
-
-#selectedSwimbotPanel
+.legend-item
 {
-    position: absolute; 
-    left: 10;
-    top: 10;
-    width:  300px;
-    height: 400px;
-    font-family: "Arial";
-    font-size: 14;
-    background-color: #efeedd;
-
-    /* for debugging */
-    /*background-color: #ee3333;*/
+    display:        flex;
+    align-items:    center;
+    gap:            8px;
+    padding:        8px 10px;
+    background:     rgba( 0, 0, 0, 0.22 );
+    border-radius:  var(--radius-small);
 }
-
-#swimbotDataPanel
+.legend-swatch
 {
-    position:   absolute; 
-    left:       10;
-    top:        10;
-    width:      220; 
-    height:     220;
-    font-family: "Arial";
-    font-size: 13;
-    color: #000000; 
-
-    /* for debugging */
-    /*background-color: #ffffdd;*/
+    width:          10px;
+    height:         10px;
+    border-radius:  3px;
+    flex:           0 0 auto;
 }
-
-
-
-
-#zapSwimbotButton
-{
-    left:       10px;
-    top:        240px;
-    width:      100px;
-}
-#randomizeSwimbotButton
-{
-    left:       120px;
-    top:        240px;
-    width:      100px;
-}
-#cloneSwimbotButton
-{
-    left:       10px;
-    top:        275px;
-    width:      100px;
-}
-#killSwimbotButton
-{
-    left:       120px;
-    top:        275px;
-    width:      100px;
-}
-#swimbotControlsTitle
-{
-    left:       10px;
-    top:        340px;
-    width:      100px;
-}
-
-#tweakGenesButton
-{
-    left:       10px;
-    top:        310px;
-    width:      150px;
-}
-
-#showGenesButton
-{
-    left:       10px;
-    top:        345px;
-    width:      150px;
-}
-
-/*
-#saveGenesButton
-{
-    left:       10px;
-    top:        330px;
-    width:      150px;
-}
-*/
-
-
-
-
-
-/* -------------------------------------------- */
-/*  tweak genes panel                           */
-/* -------------------------------------------- */
-#tweakGenesPanel
-{
-    visibility: hidden;       
-    right: 10; 
-    top: 10;
-    width: 370; 
-    height: 730;     
-    font-size: 12;       
-    z-index: 2;
-    box-shadow: 8px 8px 16px #000010;
- 
- 
- 
- 
- 
- 
-    /* 	
-    font-family: "Arial";
-    font-size: 12;
-    visibility: hidden;       
-    position: absolute; 
-    right: 10; 
-    top: 10;
-    width: 360; 
-    height: 750;    
-    background-color: #bbb8b4; 
-    box-shadow: 8px 8px 40px #000000;
-	border-radius: 4px;
-	*/
-	
-}
-
-#closeTweakGenesPanel
-{
-    visibility: hidden;       
-    /*position: absolute; */
-    right: 15; 
-    top: 15;
-    width: 30; 
-    height: 30;    
-    z-index: 3;
-    
-    /* for debugging */
-    /*background-color: #bbb8b4;*/
-}
-
-
-#tweakGenesTitle
-{
-    position: absolute; 
-    left:  20; 
-    top:  30; 
-    font-family: "Arial";
-    font-size: 14;
-}
-
-#tweakGenesCategoryNote
-{
-    position: absolute; 
-    left:  20; 
-    top:  120; 
-}
-
-#category1 { position: absolute; left:  20; top: 140; }
-#category2 { position: absolute; left:  70; top: 140; }
-#category3 { position: absolute; left: 120; top: 140; }
-#category4 { position: absolute; left: 170; top: 140; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#createRandomSwimbotButton
-{
-    position:   absolute; 
-    left:       0px;
-    top:        70px;
-    width:      150px;
-}
-#loadSwimbotButton
-{
-    position: absolute; 
-    left: 0;
-    top:  135;
-    width:  150;
-}
-
-#presetSwimbot1Button
-{
-    position: absolute; 
-    left: 0;
-    top:  230;
-}
-#presetSwimbot2Button
-{
-    position: absolute; 
-    left: 0;
-    top:  265;
-}
-#presetSwimbot3Button
-{
-    position: absolute; 
-    left: 0;
-    top:  300;
-}
-#presetSwimbot4Button
-{
-    position: absolute; 
-    left: 0;
-    top:  335;
-}
-#presetSwimbot5Button
-{
-    position: absolute; 
-    left: 80;
-    top:  230;
-}
-#presetSwimbot6Button
-{
-    position: absolute; 
-    left: 80;
-    top:  265;
-}
-#presetSwimbot7Button
-{
-    position: absolute; 
-    left: 80;
-    top:  300;
-}
-#presetSwimbot8Button
-{
-    position: absolute; 
-    left: 80;
-    top:  335;
-}
-
-
-
-/* -------------------------------------------- */
-/* tweak panel                                  */
-/* -------------------------------------------- */
-#tweakPanel
-{
-    /* inherits from menuPanel*/
-
-    /* for debugging */
-    /*background-color: #7777ff;*/
-}
-
-
-#ecosystemPanel
-{
-    position:   absolute; 
-    left:       0px; 
-    top:        0px; 
-    width:      340px; 
-    height:     160px;
-
-    /* for debugging */
-    background-color: #999933;
-}
-
-#foodGrowthDelayLabel,  #foodGrowthDelayValue   { top:  10; }
-#foodSpreadLabel,       #foodSpreadValue        { top:  30; }
-#foodBitEnergyLabel,    #foodBitEnergyValue     { top:  50; }
-#hungerThresholdLabel,  #hungerThresholdValue   { top:  70; }
-#energyToOffspringLabel,#energyToOffspringValue { top:  90; }
-#maxAgeLabel,           #maxAgeValue            { top: 110; }
-#mutationRateLabel,     #mutationRateValue      { top: 130; }
-
-#foodGrowthDelaySlider  { top:   6; }
-#foodSpreadSlider       { top:  26; }
-#foodBitEnergySlider    { top:  46; }
-#hungerThresholdSlider  { top:  66; }
-#energyToOffspringSlider{ top:  86; }
-#maxAgeSlider           { top: 106; }
-#mutationRateSlider     { top: 126; }
-
-#tweakDefaultButton
-{
-    width: 130; 
-    height: 25;    
-    left: 120; 
-    top: 160;
-    font-size: 12;       
-}
-
-
-/* ------------------------------------------------------------------------------------------------ */
-/* attraction                                                                                       */
-/* ------------------------------------------------------------------------------------------------ */
-
-#attractionPanel
-{
-    position:   absolute; 
-    left:       0px; 
-    top:        220px;
-    width:      500px
-    height:     200px;
-    
-    /* for debugging */
-    /*background-color: #99ffff; */
-}
-
-
-
-/* ---------------------------------------------------------------------------- */
-/* radio buttons for attraction                                                 */
-/* ---------------------------------------------------------------------------- */
-#radioColorful, #radioBig, #radioHyper, #radioLong, #radioStraight, #radioClosest, #radioRandom
-{
-    position: absolute; 
-    left: 0; 
-    z-index: 2;
-}
-#radioNoColor, #radioSmall, #radioStill, #radioShort, #radioCrooked
-{
-    position: absolute; 
-    left: 100; 
-    z-index: 2;
-}
-#radioSimilarColor, #radioSimilarSize, #radioSimilarHyper, #radioSimilarLength, #radioSimilarStraight
-{
-    position: absolute; 
-    left: 200; 
-    z-index: 2;
-
-    /* for debugging */
-    /*background-color: #99ffff;*/ 
-}
-
-#radioColorful, #radioNoColor, #radioSimilarColor
-{
-    position: absolute; 
-    top: 30; 
-}
-
-#radioBig, #radioSmall, #radioSimilarSize       
-{
-    position: absolute; 
-    top: 50; 
-    }
-
-#radioHyper, #radioStill, #radioSimilarHyper
-{
-    position: absolute; 
-    top: 70; 
-}
-
-#radioLong, #radioShort, #radioSimilarLength
-{
-    position: absolute; 
-    top: 90; 
-}
-
-#radioStraight, #radioCrooked, #radioSimilarStraight
-{
-    position: absolute; 
-    top: 110; 
-}
-
-#radioRandom
-{
-    position: absolute; 
-    top: 130; 
-}
-
-#radioClosest
-{
-    position: absolute; 
-    top: 150; 
-}
-
-#colorfulLabel, #bigLabel, #hyperLabel, #straightLabel, #longLabel, #randomLabel, #closestLabel
-{
-    position: absolute; 
-    left:  25; 
-    width: 200; 
-}
-
-#noColorLabel, #smallLabel, #stillLabel, #crookedLabel, #shortLabel
-{
-    position: absolute; 
-    left:  125; 
-    width: 200; 
-}
-
-#similarColorLabel, #similarSizeLabel, #similarHyperLabel, #similarStraightLabel, #similarLengthLabel
-{
-    position: absolute; 
-    left:  225; 
-    width: 100;
-        
-    /* for debugging */
-    /*background-color: #ffcccc; */ 
-}
-
-#colorfulLabel, #noColorLabel, #similarColorLabel
-{ top: 30; }
-
-#bigLabel, #smallLabel, #similarSizeLabel
-{ top: 50; }
-
-#hyperLabel, #stillLabel, #similarHyperLabel
-{ top: 70; }
-
-#straightLabel, #crookedLabel, #similarStraightLabel
-{ top: 90; }
-
-#longLabel, #shortLabel, #similarLengthLabel
-{ top: 110; }
-
-#randomLabel
-{ top: 130; }
-
-#closestLabel
-{ top: 150; }
-
-
-/*
-#freezePanel
-{
-    position: absolute; 
-    left: 10; 
-    top:  380;
-    width: 200;
-}
-*/
-
-/* -------------------------------------------- */
-/* popup panel                                  */
-/* -------------------------------------------- */
-#popUpPanel
-{
-    font-family: "Arial";
-    font-size: 12;
-    position: absolute; 
-    right: 40; 
-    top: 100;
-    width: 320; 
-    height: 200;    
-    visibility: hidden;       
-    background-color: #bbb8b4; 
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    box-shadow: 8px 8px 16px #000010;
-	border-radius: 4px;
-}    
-
-#cancelPopUpPanelButton
-{
-    visibility: hidden;
-    position: absolute; 
-    right: 55; 
-    top: 105;
-    width: 30; 
-    height: 30;    
-}
-
-
-
-
-/* -------------------------------------------- */
-/* render                                       */
-/* -------------------------------------------- */
-#noRenderPanel
-{
-    /*
-    right:          400px;
-    top:             40px;
-    width:          400px; 
-    height:         200px;
-    */
-
-right:          17px;
-top:             42px;
-width:          317px; 
-height:         105px;
-
-
-    
-    padding-top:     20px;
-    padding-right:   20px;
-    padding-bottom:  20px;
-    padding-left:    20px;
-    font-size:      12px;
-    visibility:     hidden;
-    z-index: 2;
-}
-
-
+.legend-label   { color: var(--muted); font-size: 11px; line-height: 1.2; }
+.legend-value   { color: var(--text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* -------------------------------------------- */
 /* info panel                                   */
 /* -------------------------------------------- */
 #infoPanel
 {
-/* inherits from menuPanel*/
+    display:        flex;
+    flex-direction: column;
+    min-height:     100%;
 }
-
-
-#prevInfoButton
-{
-    visibility: hidden; 
-    left:       0; 
-    bottom:     0; 
-    width:      80; 
-}
-
-#nextInfoButton
-{
-    left: 190; 
-    bottom: 0; 
-    width: 80; 
-}
-
-
-#pageNumberLabel
-{
-    position: absolute; 
-    left: 90; 
-    bottom: 0; 
-    width: 200; 
-    font-family: "Arial";
-    font-size: 14;
-}
+#infoPanel.hidden { display: none; }
 
 #infoText
 {
-    position: absolute; 
-    /*visibility: hidden; */
-    color: #223322; 
-    font-family: "Arial";
-    font-size: 13;
-    
-    left: 10;
-    top: 20;
-    width: 320;
-    
-    /* for debugging */
-    /*background-color: #559999;*/
+    flex:           1 1 auto;
+    color:          var(--text-soft);
+    font-size:      13px;
+    line-height:    1.6;
 }
+#infoText big
+{
+    display:        block;
+    margin-bottom:  -8px;
+    color:          var(--text);
+    font-size:      16px;
+}
+#infoText big + br { display: none; }
+#infoText b     { color: var(--text); }
+#infoText img   { max-width: 100%; }
 
+.pager
+{
+    display:        flex;
+    align-items:    center;
+    justify-content: space-between;
+    margin-top:     16px;
+    padding-top:    12px;
+    border-top:     1px solid var(--card-border);
+}
+#pageNumberLabel
+{
+    color:          var(--muted);
+    font-size:      12px;
+    font-variant-numeric: tabular-nums;
+}
 
 /* -------------------------------------------- */
-/* data display panel                           */
-/* -------------------------------------------- */
-#dataDisplay
-{
-    /*
-    font-family: "Arial";
-    */
-
-    font-size: 14;
-    
-overflow:auto; /* added for the family tree display
-    
-    
-    /*word-wrap: 'break-word';*/
-    word-break: break-all;
-    visibility: hidden;       
-    /*position: absolute;*/ 
-    right: 200; 
-    top: 100;
-    width: 500; 
-    height: 450;    
-    z-index: 2;
-
-    padding-left: 30px;
-    padding-right: 30px;
-    box-shadow: 8px 8px 16px #000010;
-	/*border-radius: 4px;*/
-
-    /* for debugging */
-    /*background-color: #bbb8b4;*/
-}
-
-
-
-#closeDataDisplay
-{
-    visibility: hidden;       
-    /* position: absolute; */ 
-    right: 205; 
-    top: 105;
-    width: 30; 
-    height: 30;  
-    z-index: 3;      
-    
-    /* for debugging */
-    /*background-color: #bbb8b4;*/
-}
-
-
-
-#dataDisplayButton
-{
-    visibility: hidden;
-    position: absolute; 
-    right: 240; 
-    top: 210;
-    width: 120; 
-    height: 25;    
-    
-    /* for debugging */
-    background-color: #bbb8b4; 
-}
-
-
-/* -------------------------------------------- */
-/* donate panel                                 */
-/* -------------------------------------------- */
-
-#donatePanel
-{
-    /*
-    position: absolute; 
-    left: 270; 
-    top: 460; 
-    width: 130; 
-    height: 40; 
-    */
-}
-
-#donateButton
-{
-    position: absolute; 
-    left: 270; 
-    top: 460; 
-    width:  90px; 
-    height: 25px;
-}
-
-#donateHeart
-{
-    position: absolute; 
-    left: 105; 
-    top: 6; 
-}
-
-
-/* -------------------------------------------- */
-/* contact panel                                */
+/* footer                                       */
 /* -------------------------------------------- */
 #contactPanel
 {
-    color: #000000; 
-    font-family: "Arial";
-    font-size: 12;
-    position: absolute; 
-    left: 0; 
-    top: 460; 
-    width: 150; 
-    height: 40; 
+    padding:        2px 4px;
+    color:          var(--muted);
+    font-size:      11.5px;
+    text-align:     center;
+}
+#contactPanel a { color: var(--text-soft); }
 
-    /* for debugging */
-    /*background-color: #aaccaa;*/
+/* -------------------------------------------- */
+/* stage notice (rendering off)                 */
+/* -------------------------------------------- */
+.stage-notice
+{
+    position:       absolute;
+    left:           50%;
+    top:            50%;
+    transform:      translate( -50%, -50% );
+    width:          min( 360px, 80% );
+    padding:        22px 24px;
+    text-align:     center;
+    color:          var(--text-soft);
+    background:     rgba( 12, 21, 36, 0.92 );
+    border:         1px solid var(--card-border);
+    border-radius:  16px;
+    box-shadow:     0 20px 50px rgba( 0, 0, 0, 0.5 );
+    cursor:         pointer;
+    z-index:        5;
+}
+.stage-notice:hover { border-color: var(--accent-strong); }
+.stage-notice p     { margin: 0; }
+.notice-title
+{
+    margin-bottom:  6px;
+    color:          var(--text);
+    font-size:      16px;
+    font-weight:    700;
 }
 
+/* -------------------------------------------- */
+/* modals (popup, data display, tweak genes)    */
+/* -------------------------------------------- */
+.modal
+{
+    position:       fixed;
+    z-index:        20;
+    top:            50%;
+    left:           50%;
+    transform:      translate( -50%, -50% );
+    width:          min( 420px, 92vw );
+    max-height:     86vh;
+    overflow:       auto;
+    padding:        22px;
+    color:          var(--text-soft);
+    background:     rgba( 12, 21, 36, 0.97 );
+    border:         1px solid var(--card-border);
+    border-radius:  16px;
+    box-shadow:     0 24px 60px rgba( 0, 0, 0, 0.6 );
+    backdrop-filter: blur( 8px );
+}
+.modal.wide     { width: min( 620px, 92vw ); }
+.modal.side
+{
+    top:            16px;
+    bottom:         16px;
+    left:           auto;
+    right:          16px;
+    transform:      none;
+    width:          calc( var(--sidebar-width) - 8px );
+    max-height:     none;
+}
+
+.modal-close
+{
+    position:       sticky;
+    top:            0;
+    float:          right;
+    width:          30px;
+    height:         30px;
+    margin:         -8px -8px 0 8px;
+    padding:        0;
+    color:          var(--text-soft);
+    background:     var(--control);
+    border:         1px solid var(--control-border);
+    border-radius:  50%;
+    font-size:      18px;
+    line-height:    1;
+    z-index:        1;
+}
+.modal-close:hover { background: var(--control-hover); color: var(--text); }
+
+#dataDisplay
+{
+    font-family:    ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size:      12px;
+    word-break:     break-all;
+}
+
+/* tweak genes content (generated in ui.js) */
+.gene-title     { color: var(--text); font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.gene-note      { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.gene-categories
+{
+    display:                grid;
+    grid-template-columns:  repeat( 4, 1fr );
+    gap:                    6px;
+    margin-bottom:          14px;
+}
+.gene-list
+{
+    display:        flex;
+    flex-direction: column;
+    gap:            6px;
+}
+.gene-divider
+{
+    height:         1px;
+    margin:         6px 0;
+    background:     var(--card-border);
+}
+.gene-row
+{
+    display:                grid;
+    grid-template-columns:  minmax( 0, 1fr ) 110px 34px;
+    align-items:            center;
+    gap:                    10px;
+}
+.geneTweakerName
+{
+    color:          var(--text-soft);
+    font-size:      12px;
+    white-space:    nowrap;
+    overflow:       hidden;
+    text-overflow:  ellipsis;
+}
+.geneTweakerValue
+{
+    color:          var(--accent);
+    font-size:      12px;
+    font-weight:    600;
+    text-align:     right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------- */
+/* narrow screens: stack pool above controls    */
+/* -------------------------------------------- */
+@media ( max-width: 760px )
+{
+    html, body  { overflow: auto; }
+    #app        { flex-direction: column; height: auto; }
+    #stage      { flex: 0 0 62vh; height: 62vh; }
+    #masterPanel
+    {
+        flex:       0 0 auto;
+        width:      100%;
+        border-left: 0;
+        border-top: 1px solid var(--card-border);
+        overflow:   visible;
+    }
+    .modal.side
+    {
+        left:       16px;
+        width:      auto;
+    }
+}

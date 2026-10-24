@@ -847,8 +847,7 @@ for (let n=0; n<familyTree.getNumNodes(); n +=THROTTLE )
     // the following code displays the data in a div element:
     //-------------------------------------------------------------------
     /*
-    document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-    document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+    setShown( 'dataDisplayModal', true ); 
     document.getElementById( 'dataDisplay'      ).innerHTML 
     = 
     "<br>" 
@@ -923,7 +922,7 @@ function openPopupPanelForInput( text, mode )
     //----------------------------------------------------------------------------------   
     document.getElementById( 'noSavePopUpPanelButton'   ).style.visibility = "hidden";   
     document.getElementById( 'savePopUpPanelButton'     ).style.visibility = "hidden";  
-    document.getElementById( 'dataDisplayButton'        ).style.visibility = "hidden";    
+    setShown( 'dataDisplayButton', false );    
 
 
     //----------------------------------------------------------------------------------    
@@ -1000,7 +999,7 @@ function openPopupPanelForInput( text, mode )
         //----------------------------------------------------   
         // give user option to display data...  
         //----------------------------------------------------   
-        document.getElementById( 'dataDisplayButton'    ).style.visibility = "visible";   
+        setShown( 'dataDisplayButton', true );   
     }
     else if ( _inputMode === InputMode.LOAD_SWIMBOT_FROM_FILE )
     {
@@ -1111,8 +1110,7 @@ function displayData( filename )
             let json = JSON.stringify( { genes } );
             //console.log( json );
             
-            document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-            document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+            setShown( 'dataDisplayModal', true ); 
             document.getElementById( 'dataDisplay'      ).innerHTML 
             = "Copy the text below, put it in a new text file, and then give"
             + "<br>" 
@@ -1133,8 +1131,7 @@ function displayData( filename )
         let pool = genePool.getPoolData();
         let json = JSON.stringify( { pool } );
 
-        document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-        document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+        setShown( 'dataDisplayModal', true ); 
         document.getElementById( 'dataDisplay'      ).innerHTML
         = "Copy the text below, put it in a new text file, and then give"
         + "<br>" 
@@ -1158,8 +1155,7 @@ function showSwimbotGenes(s)
         let json = JSON.stringify( { genes } );
         //console.log( json );
     
-        document.getElementById( 'dataDisplay'      ).style.visibility = "visible"; 
-        document.getElementById( 'closeDataDisplay' ).style.visibility = "visible"; 
+        setShown( 'dataDisplayModal', true ); 
         document.getElementById( 'dataDisplay'      ).innerHTML 
         = "<br>" 
         + "<big><b>Save genes of swimbot " + s.toString() + "</b></big>"
@@ -1185,7 +1181,79 @@ function showSwimbotGenes(s)
 //----------------------------
 function closeDataDisplay()
 {
-    document.getElementById( 'dataDisplay'      ).style.visibility = "hidden"; 
-    document.getElementById( 'closeDataDisplay' ).style.visibility = "hidden"; 
+    setShown( 'dataDisplayModal', false ); 
 }
 
+
+
+//=======================================================================================
+//  Save / load a whole pool as a .json file
+//=======================================================================================
+
+//-----------------------------------------------------------------------
+// download the pool (swimbots, genes, food, settings, camera)
+//-----------------------------------------------------------------------
+function savePoolToFile()
+{
+    let data = genePool.getPoolData();
+    let blob = new Blob( [ JSON.stringify( data ) ], { type: "application/json" } );
+    let link = document.createElement( 'a' );
+
+    link.href     = URL.createObjectURL( blob );
+    link.download = "genepool-" + data.timeStep + ".json";
+    document.body.appendChild( link );
+    link.click();
+    link.remove();
+    setTimeout( function() { URL.revokeObjectURL( link.href ); }, 10000 );
+
+    showSaveLoadStatus( "Saved " + data.numSwimbots + " swimbots at time step " + data.timeStep + "." );
+}
+
+//-----------------------------------------------------------------------
+// replace the current pool with one from a file chosen by the user
+//-----------------------------------------------------------------------
+function loadPoolFromFile( event )
+{
+    let file = event.target.files[0];
+    event.target.value = "";    // so the same file can be chosen again
+    if ( ! file ) return;
+
+    let reader = new FileReader();
+    reader.onload = function()
+    {
+        let data = null;
+        try 
+        { 
+            data = JSON.parse( reader.result ); 
+        } 
+        catch ( e ) 
+        { 
+            showSaveLoadStatus( "That file isn't a saved Gene Pool (it isn't valid JSON)." ); 
+            return; 
+        }
+
+        if ( ! Array.isArray( data.swimbotArray ) || ! Array.isArray( data.foodBitArray ) )
+        {
+            showSaveLoadStatus( "That file doesn't look like a saved Gene Pool." );
+            return;
+        }
+
+        genePool.setPoolData( data );
+
+        closeTweakGenesPanel();
+        clearViewMode();
+        updateEcosystemUI();
+        _graph.initialize();
+        setRendering( true );
+        syncToggleButtons();
+
+        showSaveLoadStatus( "Loaded " + data.swimbotArray.length + " swimbots at time step " + ( data.timeStep || 0 ) + "." );
+    };
+    reader.readAsText( file );
+}
+
+//-----------------------------------------------------------------------
+function showSaveLoadStatus( text )
+{
+    document.getElementById( 'saveLoadStatus' ).textContent = text;
+}
